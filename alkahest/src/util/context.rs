@@ -9,7 +9,7 @@ pub(crate) struct Context {
 impl Context {
     pub(crate) fn init() -> Result<Self, &'static str> {
         // initialize window system
-        let window_context = super::super::window::init()?;
+        let window_context = super::super::window::init(1920, 1080, "Alkahest")?;
 
         return Ok(Self { window_context });
     }

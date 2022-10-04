@@ -1,12 +1,12 @@
 extern crate glfw;
 
-use super::types::GameWindow;
+use super::util::types::WindowContext;
 use glfw::Context;
 use std::sync::mpsc::Receiver;
 
 static mut GLFW_INIT: bool = false;
 
-pub(crate) fn init() -> Result<GameWindow, &'static str> {
+pub(crate) fn init() -> Result<WindowContext, &'static str> {
     unsafe {
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
         GLFW_INIT = true;
@@ -22,7 +22,7 @@ pub(crate) fn init() -> Result<GameWindow, &'static str> {
         // Poll for events
         glfw.poll_events();
         
-        return Ok(GameWindow { glfw, window, events });
+        return Ok(WindowContext { glfw, window, events });
     }
 }
 

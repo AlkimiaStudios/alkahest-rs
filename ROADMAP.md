@@ -5,7 +5,7 @@ Alkahest engine, listed in no particular order.
 
 * [X] Application Entrypoint
 * [X] Window Creation
-* [ ] Logging
+* [X] Logging
 * [ ] Input System
 * [ ] Async Job Queue
 * [ ] Entity Component System

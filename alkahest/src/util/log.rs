@@ -1,5 +1,7 @@
 extern crate chrono;
 
+/// Used to format the level string into a full log line header.
+#[doc(hidden)]
 pub fn __private_format_log(level: &str) -> String {
     let time = std::time::SystemTime::now();
     let dt: chrono::DateTime<chrono::offset::Local> = time.into();
@@ -8,6 +10,7 @@ pub fn __private_format_log(level: &str) -> String {
     s
 }
 
+/// Logs an error message to stdout.
 #[macro_export]
 macro_rules! error {
     () => {};
@@ -17,6 +20,7 @@ macro_rules! error {
     };
 }
 
+/// Logs a warning message to stdout.
 #[macro_export]
 macro_rules! warn {
     () => {};
@@ -26,6 +30,7 @@ macro_rules! warn {
     };
 }
 
+/// Logs an info message to stdout.
 #[macro_export]
 macro_rules! info {
     () => {};
@@ -35,6 +40,7 @@ macro_rules! info {
     };
 }
 
+/// Logs a debug message to stdout.
 #[macro_export]
 macro_rules! debug {
     () => {};
@@ -44,6 +50,7 @@ macro_rules! debug {
     };
 }
 
+/// Logs a trace message to stdout.
 #[macro_export]
 macro_rules! trace {
     () => {};

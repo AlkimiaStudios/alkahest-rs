@@ -4,6 +4,9 @@
 
 Alkahest is an open-source game engine created using Rust and OpenGL.
 
+## Is it any good?
+[Yes.](https://news.ycombinator.com/item?id=3067434)
+
 ### Building
 
 ```shell

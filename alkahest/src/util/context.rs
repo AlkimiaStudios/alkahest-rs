@@ -7,7 +7,7 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub(crate) fn init() -> Result<Self, &'static str> {
+    pub(crate) fn init() -> Result<Self, Box<dyn std::error::Error>> {
         // initialize window system
         let window_context = super::super::window::init(1920, 1080, "Alkahest")?;
 

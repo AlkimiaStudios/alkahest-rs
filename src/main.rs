@@ -1,14 +1,16 @@
+use alkahest::trace;
+
 struct Sandbox;
 impl Sandbox {
     fn init() {
-        println!("In Sandbox::init()!");
+        trace!("In Sandbox::init()!");
     }
 
     fn update() {
     }
 
     fn cleanup() {
-        println!("In Sandbox::cleanup()!");
+        trace!("In Sandbox::cleanup()!");
     }
 }
 

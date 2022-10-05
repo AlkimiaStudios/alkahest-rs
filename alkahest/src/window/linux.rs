@@ -1,6 +1,7 @@
 extern crate glfw;
 
 use super::super::util::types::WindowContext;
+use crate::trace;
 use glfw::Context;
 
 static mut GLFW_INIT: bool = false;
@@ -33,7 +34,7 @@ pub(super) fn process_events(window_context: &mut WindowContext) {
     window_context.glfw.poll_events();
 
     for (_, event) in glfw::flush_messages(&window_context.events) {
-        println!("{:?}", event);
+        trace!("KeyEvent: {:?}", event);
         match event {
             glfw::WindowEvent::Close => {
                 window_context.window.set_should_close(true);

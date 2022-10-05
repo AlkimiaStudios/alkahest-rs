@@ -1,8 +1,13 @@
-pub(crate) mod util;
+pub mod util;
 pub(crate) mod window;
 mod game;
 
 pub fn run(init: fn() -> (), update: fn() -> (), cleanup: fn() -> ()) {
+    error!("This is an error message!");
+    warn!("This is a warning message.");
+    info!("This is an info message.");
+    debug!("This is a debug message.");
+    trace!("This is a trace message...");
     let context = game::sys_init();
     let mut window_context = context.window_context;
     init();

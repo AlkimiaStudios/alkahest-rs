@@ -13,12 +13,6 @@ use super::util::types::WindowContext;
 /// * `name`: &str - Title of the window.
 ///
 /// -> Result<alkahest::util::types::WindowContext, &'static str>
-///
-/// # Examples
-/// ```rust
-/// let window_context = window::init(1920, 1080, "Test Window")?;
-/// Ok(())
-/// ```
 pub(crate) fn init(width: u32, height: u32, name: &str) -> Result<WindowContext, &'static str> {
     window_impl::init(width, height, name)
 }
@@ -29,17 +23,6 @@ pub(crate) fn init(width: u32, height: u32, name: &str) -> Result<WindowContext,
 /// events that have happened since the last call.
 ///
 /// * `window_context`: &mut alkahest::types::WindowContext - The context object for the game window.
-///
-/// # Examples
-/// ```rust
-/// {
-///     match window::init(1920, 1080, "Test Window") {
-///         Err(_) => panic!,
-///         Ok(context) => context,
-///     }
-/// }
-/// window::process_events(context);
-/// ```
 pub(crate) fn process_events(window_context: &mut WindowContext) {
     window_impl::process_events(window_context)
 }

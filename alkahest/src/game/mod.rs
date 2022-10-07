@@ -7,11 +7,6 @@ use glfw::Context;
 /// to initialize various engine subsystems. It also returns a
 /// Context instance to be used during the life of the engine for
 /// various processes/systems.
-///
-/// # Examples
-/// ```rust
-/// let engine_context = game::sys_init()/
-/// ```
 #[doc(hidden)]
 pub(super) fn sys_init() -> util::context::Context {
     trace!("Initializing engine context");
@@ -26,15 +21,6 @@ pub(super) fn sys_init() -> util::context::Context {
 /// This method is called each time the game loop cycles. It is
 /// passed context objects to provide necessary state to each engine
 /// subsystem.
-///
-/// # Examples
-/// ```rust
-/// let context = game::sys_init();
-/// let mut window_context = context.window_context;
-/// while !window_context.window.should_close() {
-///     game::sys_update(&mut window_context);
-/// }
-/// ```
 #[doc(hidden)]
 pub(super) fn sys_update(window_context: &mut util::types::WindowContext) {
     window::process_events(window_context);
@@ -46,11 +32,6 @@ pub(super) fn sys_update(window_context: &mut util::types::WindowContext) {
 /// This method is called at the end of the engine lifetime, in order
 /// to clean up any resources that were provisioned during runtime, if
 /// necessary.
-///
-/// # Examples
-/// ```rust
-/// game::sys_cleanup();
-/// ```
 #[doc(hidden)]
 pub(super) fn sys_cleanup() {
     trace!("In game::sys_cleanup()!");

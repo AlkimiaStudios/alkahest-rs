@@ -22,10 +22,9 @@ impl<T, const N: usize> RingBuffer<T, N> {
     /// # Examples
     /// ```rust
     /// use alkahest::util::containers::ring_buffer::RingBuffer;
-    /// let buf: RingBuffer<u32, 10> = RingBuffer::default();
+    /// let mut buf: RingBuffer<u32, 10> = RingBuffer::default();
     /// let num: u32 = 1000;
-    /// let inserted = buf.push(num)?;
-    /// Ok()
+    /// let inserted = buf.push(num).unwrap();
     /// ```
     pub fn push(&mut self, item: T) -> Result<&T, ContainerError> {
         if self.count == N {
@@ -47,11 +46,11 @@ impl<T, const N: usize> RingBuffer<T, N> {
     ///
     /// # Examples
     /// ```rust
-    /// let buf: RingBuffer<u32, 10> = RingBuffer::default();
+    /// use alkahest::util::containers::ring_buffer::RingBuffer;
+    /// let mut buf: RingBuffer<u32, 10> = RingBuffer::default();
     /// let num: u32 = 1000;
-    /// let inserted = buf.push(num)?;
-    /// let popped = buf.pop()?;
-    /// Ok()
+    /// let inserted = buf.push(num).unwrap();
+    /// let popped = buf.pop().unwrap();
     /// ```
     pub fn pop(&mut self) -> Result<&T, ContainerError> {
         if self.count == 0 {
@@ -68,29 +67,11 @@ impl<T, const N: usize> RingBuffer<T, N> {
     }
 }
 
-// Currently, Default is only implemented for arrays of length < 32. As such,
-// following this impl block are a few blocks that implement for common larger
-// sizes of arrays until Default is eventually updated.
-impl<T, const N: usize> Default for RingBuffer<T, N>
-where
-    T: Copy + Default,
-    [T; N]: Default,
-{
+impl<T, const N: usize> Default for RingBuffer<T, N> where T: Copy + Default {
     fn default() -> RingBuffer<T, N> {
         RingBuffer {
             count: 0usize,
-            items: Default::default(),
-            head: 0usize,
-            tail: 0usize
-        }
-    }
-}
-
-impl<T> RingBuffer<T, 64> where T: Copy + Default {
-    fn init() -> RingBuffer<T, 64> {
-        RingBuffer {
-            count: 0usize,
-            items: [T::default(); 64],
+            items: [T::default(); N],
             head: 0usize,
             tail: 0usize
         }
@@ -141,11 +122,5 @@ mod tests {
             Ok(_) => Err("RingBuffer.pop succeeded when buffer should have been empty!"),
             Err(_) => Ok(()),
         }
-    }
-
-    #[test]
-    fn test_use_init_for_large_buffers() {
-        let buf: RingBuffer<u32, 64> = RingBuffer::init();
-        assert_eq!(buf.count, 0);
     }
 }

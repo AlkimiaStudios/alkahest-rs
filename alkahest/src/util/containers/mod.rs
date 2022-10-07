@@ -1,5 +1,5 @@
 /// Contains the RingBuffer<T, const N: usize> struct
-pub mod ring_queue;
+pub mod ring_buffer;
 
 /// Errors used by container structs
 #[derive(Debug)]

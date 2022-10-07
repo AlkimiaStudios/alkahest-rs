@@ -3,4 +3,6 @@ pub mod containers;
 pub(crate) mod context;
 /// Contains macros for logging to stdout for use inside and outside the engine.
 pub mod log;
+/// Contains functions for accessing game input state
+pub mod input;
 pub(crate) mod types;

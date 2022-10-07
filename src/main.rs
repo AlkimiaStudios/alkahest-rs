@@ -1,4 +1,5 @@
-use alkahest::trace;
+use alkahest::{info, trace};
+use alkahest::util::input;
 
 struct Sandbox;
 impl Sandbox {
@@ -7,6 +8,9 @@ impl Sandbox {
     }
 
     fn update() {
+        if input::is_key_down(input::Key::Space) {
+            info!("Pressed space!");
+        }
     }
 
     fn cleanup() {

@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 glfw = "*"
 gl = "*"
+glm = "*"
 chrono = "*"

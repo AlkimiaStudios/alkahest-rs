@@ -5,4 +5,6 @@ pub(crate) mod context;
 pub mod log;
 /// Contains functions for accessing game input state
 pub mod input;
+/// Contains structs and functions for managing resources.
+pub mod resources;
 pub(crate) mod types;

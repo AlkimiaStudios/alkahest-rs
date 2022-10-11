@@ -10,10 +10,12 @@ use glfw::Context;
 #[doc(hidden)]
 pub(super) fn sys_init() -> util::context::Context {
     trace!("Initializing engine context");
-    match util::context::Context::init() {
+    let context = match util::context::Context::init() {
         Err(e) => panic!("Unable to initialize engine context! Error: {:?}", e),
         Ok(context) => context,
-    }
+    };
+
+    return context;
 }
 
 /// Updates the current engine state on each game loop cycle.
@@ -33,6 +35,7 @@ pub(super) fn sys_update(window_context: &mut util::types::WindowContext) {
 /// to clean up any resources that were provisioned during runtime, if
 /// necessary.
 #[doc(hidden)]
-pub(super) fn sys_cleanup() {
+pub(super) fn sys_cleanup(context: util::context::Context) {
     trace!("In game::sys_cleanup()!");
+    util::asynchronous::cleanup(&context.async_context);
 }

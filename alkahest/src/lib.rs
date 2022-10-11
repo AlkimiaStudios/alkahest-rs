@@ -34,15 +34,14 @@ pub fn run(init: fn() -> (), update: fn() -> (), cleanup: fn() -> ()) {
     info!("This is an info message.");
     debug!("This is a debug message.");
     trace!("This is a trace message...");
-    let context = game::sys_init();
-    let mut window_context = context.window_context;
+    let mut context = game::sys_init();
     init();
 
-    while !window_context.window.should_close() {
-        game::sys_update(&mut window_context);
+    while !context.window_context.window.should_close() {
+        game::sys_update(&mut context.window_context);
         update();
     }
 
-    game::sys_cleanup();
+    game::sys_cleanup(context);
     cleanup();
 }

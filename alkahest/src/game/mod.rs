@@ -1,6 +1,13 @@
 use super::*;
 use glfw::Context;
 
+#[derive(Clone)]
+struct TestJob;
+impl util::asynchronous::Job for TestJob {
+    fn run(&self, index: u32) {
+        debug!("Hello from thread {:?}! Job Index: {}", std::thread::current().id(), index);
+    }
+}
 /// Initializes the engine systems and stores engine context.
 ///
 /// This method is called at the beginning of the `run()` function
@@ -14,6 +21,9 @@ pub(super) fn sys_init() -> util::context::Context {
         Err(e) => panic!("Unable to initialize engine context! Error: {:?}", e),
         Ok(context) => context,
     };
+
+    let t: TestJob = TestJob;
+    context.async_context.dispatch_many(200, 4, Box::new(t) as Box<dyn util::asynchronous::Job>);
 
     return context;
 }

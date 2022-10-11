@@ -2,29 +2,34 @@ use std::sync::{Arc, Mutex, Condvar};
 use std::sync::atomic::{AtomicBool, Ordering, AtomicU64};
 use crate::{trace, error};
 
+// We compare these two values to know if we have completed all dispatched jobs
 static mut CURRENT_LABEL: u64 = 0;
 static FINISHED_LABEL: AtomicU64 = AtomicU64::new(0);
 
+// In order to guarantee memory safety and appease the borrow checker, all
+// structs that implement the Job trait must also implement Clone. This
+// requirement should be simple, though, since only PODs should be stored
+// in Jobs anyway
 pub(crate) trait Job: Send + Sync + JobClone {
     fn run(&self, index: u32) -> ();
 }
 
+// Workaround for implementing Copy on a dynamic Trait object
 pub(crate) trait JobClone {
     fn clone_box(&self) -> Box<dyn Job>;
 }
-
 impl<T> JobClone for T where T: 'static + Job + Clone {
     fn clone_box(&self) -> Box<dyn Job> {
         Box::new(self.clone())
     }
 }
-
 impl Clone for Box<dyn Job> {
     fn clone(&self) -> Box<dyn Job> {
         self.clone_box()
     }
 }
 
+// The GroupJob is used only for grouping jobs inside the dispatch_many method
 #[derive(Clone)]
 struct GroupJob {
     job_count: u32,
@@ -32,7 +37,6 @@ struct GroupJob {
     group_index: u32,
     inner_job: Box<dyn Job>,
 }
-
 impl Job for GroupJob {
     fn run(&self, _index: u32) {
         let group_job_offset = self.group_index * self.group_size;
@@ -51,7 +55,7 @@ pub(crate) struct AsyncContext {
 }
 
 pub(crate) fn init() -> AsyncContext {
-    let (tx, rx) = flume::unbounded();
+    let (tx, rx) = flume::bounded(256);
 
     let thread_count = match std::thread::available_parallelism() {
         Ok(count) => usize::from(count),
@@ -99,28 +103,30 @@ impl AsyncContext {
         std::thread::yield_now();
     }
 
-    pub(crate) fn dispatch(&self, job: Box<dyn Job>) -> Result<(), flume::SendError<Box<dyn Job>>> {
+    pub(crate) fn dispatch(&self, job: Box<dyn Job>) {
         unsafe {
             CURRENT_LABEL = CURRENT_LABEL + 1;
-            // The below call blocks! Need to set up a non-blocking method!
-            self.sender.send(job)
+            let mut submitted = false;
+            while !submitted {
+                match self.sender.try_send(job.clone()) {
+                    Ok(()) => { submitted = true; },
+                    Err(_) => { self.poll(); },
+                }
+            }
         }
     }
 
-    pub(crate) fn dispatch_many(&self, job_count: u32, group_size: u32, job: Box<dyn Job>) -> Result<(), flume::SendError<Box<dyn Job>>> {
+    pub(crate) fn dispatch_many(&self, job_count: u32, group_size: u32, job: Box<dyn Job>) {
         if job_count + group_size == 0 {
             error!("AsyncContext.dispatch_many() called with invalid arguments!");
-            return Ok(());
+            return;
         }
         
         let group_count = (job_count + group_size - 1) / group_size;
         for group_index in 0..group_count {
             let group_job = GroupJob { group_index, group_size, job_count, inner_job: job.clone() };
-            // The below call blocks! Need to set up a non-blocking method!
-            self.sender.send(Box::new(group_job) as Box<dyn Job>)?;
+            self.dispatch(Box::new(group_job) as Box<dyn Job>);
         }
-
-        Ok(())
     }
 
     pub(crate) fn is_busy(&self) -> bool {

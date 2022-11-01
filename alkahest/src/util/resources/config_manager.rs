@@ -1,23 +1,31 @@
-/// Resource Manager for configurations
-pub struct ConfigManager;
+use super::{AssetManager, AssetHandle, Asset};
 
-/// Contains configuration data
-pub struct ConfigResource;
+pub(crate) struct ConfigManager;
 
-use super::{ResourceHandle, ResourceManager};
+#[derive(Clone)]
+pub(crate) struct Config {
+    value: u32,
+}
 
-impl ResourceManager<ConfigResource> for ConfigManager {
-    fn load_resource(_path: String) -> ResourceHandle {
-        let h = ResourceHandle{ value: 0 };
-        return h;
+impl Asset for Config {}
+
+impl AssetManager<Config> for ConfigManager {
+    fn load_to_cache(&mut self, _path: String) -> AssetHandle {
+        let handle = AssetHandle { value: 0 };
+        handle
     }
 
-    fn purge_resource(_handle: ResourceHandle) {
-
+    fn load_direct(_path: String) -> Config {
+        let config = Config { value: 0 };
+        config
     }
 
-    fn get_resource(_handle: ResourceHandle) -> ConfigResource {
-        let r = ConfigResource;
-        return r;
+    fn load_from_cache(&self, _handle: AssetHandle) -> Config {
+        let config = Config { value: 0 };
+        config
+    }
+
+    fn purge_from_cache(&mut self, _handle: AssetHandle) {
+
     }
 }

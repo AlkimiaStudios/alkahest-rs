@@ -10,4 +10,3 @@ pub mod log;
 pub mod input;
 /// Contains structs and functions for managing resources.
 pub mod resources;
-pub(crate) mod types;

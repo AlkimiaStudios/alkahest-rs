@@ -34,7 +34,7 @@ pub(super) fn sys_init() -> util::context::Context {
 /// passed context objects to provide necessary state to each engine
 /// subsystem.
 #[doc(hidden)]
-pub(super) fn sys_update(window_context: &mut util::types::WindowContext) {
+pub(super) fn sys_update(window_context: &mut crate::window::WindowContext) {
     window::process_events(window_context);
     window_context.window.swap_buffers();
 }

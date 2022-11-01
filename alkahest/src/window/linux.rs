@@ -1,9 +1,15 @@
 extern crate glfw;
 
-use super::super::util::types::WindowContext;
 use super::super::util::input;
-use crate::{trace, debug};
-use glfw::Context;
+use crate::trace;
+use glfw::{Context, Glfw, Window, WindowEvent};
+use std::sync::mpsc::Receiver;
+
+pub(crate) struct WindowContext {
+    pub glfw: Glfw,
+    pub window: Window,
+    pub events: Receiver<(f64, WindowEvent)>,
+}
 
 static mut GLFW_INIT: bool = false;
 

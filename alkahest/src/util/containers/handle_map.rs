@@ -1,14 +1,14 @@
-use bitfield::bitfield;
+use crate::trace;
+use modular_bitfield::prelude::*;
 
-bitfield! {
-    /// Used to access items in a HandleMap
-    #[derive(Copy, Clone)]
-    pub struct Handle(u64);
-    impl Debug;
-    u32, index, set_index: 32, 0; 
-    u16, generation, set_generation: 16, 0;
-    u16, item_type, set_item_type: 16, 1;
-    u16, free, set_free: 0;
+/// Handle used to access items in a HandleMap
+#[bitfield]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Handle {
+    index: B32,
+    generation: B16,
+    item_type: B15,
+    free: B1,
 }
 
 #[derive(Debug)]
@@ -28,7 +28,7 @@ pub struct HandleMap<T> {
     freelist_back: u32,
 }
 
-impl<T> HandleMap<T> where T: Clone {
+impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
     /// Creates a new HandleMap with space for `reserve_count` items
     pub fn new(item_type: u16, reserve_count: usize) -> HandleMap<T> {
         let mut h = HandleMap {
@@ -48,15 +48,22 @@ impl<T> HandleMap<T> where T: Clone {
         return h;
     }
 
+    /// Returns the number of items stored in the dense set
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
     /// Inserts an item into the map, returning a Handle for later access
     pub fn insert(&mut self, item: T) -> Handle {
         let mut h: Handle;
         self.fragmented = true;
 
         if self.freelist_empty() {
-            let mut inner_id = Handle(0);
+            let mut inner_id = Handle::new();
             inner_id.set_index(self.items.len() as u32);
+            trace!("{:?}", inner_id);
             inner_id.set_generation(1);
+            trace!("{:?}", inner_id);
             inner_id.set_item_type(self.item_type);
 
             h = inner_id;
@@ -101,7 +108,7 @@ impl<T> HandleMap<T> where T: Clone {
         let mut inner_id = self.handles[handle.index() as usize];
         let inner_index = inner_id.index();
 
-        inner_id.set_free(true);
+        inner_id.set_free(1);
         inner_id.set_generation(inner_id.generation() + 1);
         inner_id.set_index(0xFFFFFFFF);  // Max value here == end of freelist
         self.handles[handle.index() as usize] = inner_id;
@@ -143,4 +150,34 @@ impl<T> HandleMap<T> where T: Clone {
             && handle.generation() == inner_id.generation()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::trace;
+
+    #[test]
+    fn test_init() {
+        let map: HandleMap<u32> = HandleMap::new(0, 10);
+        assert_eq!(map.len(), 0usize);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut map: HandleMap<u32> = HandleMap::new(0, 10);
+        let h = map.insert(1u32);
+        assert_eq!(h, Handle::new().with_generation(1));
+        assert_eq!(map.len(), 1usize);
+    }
+
+    #[test]
+    fn test_get() {
+        let mut map: HandleMap<u32> = HandleMap::new(0, 10);
+        let h = map.insert(9999u32);
+        let value = map.get(h);
+        assert_eq!(value, 9999u32)
+    }
+
+    //TODO: Test cases for erasing and bounds-testing
 }

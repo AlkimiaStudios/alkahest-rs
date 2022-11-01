@@ -1,7 +1,7 @@
 use super::{AssetManager, AssetHandle, Asset};
 use crate::util::containers::HandleMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Config {
     value: u32,
 }

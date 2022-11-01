@@ -13,6 +13,8 @@ pub enum ContainerError {
     NoItemsError(),
     /// Error returned when the value is actually None
     MissingValueError(),
+    /// Error returned when trying to access a map with an invalid Handle
+    InvalidHandleError(),
 }
 
 impl std::fmt::Display for ContainerError {
@@ -24,6 +26,8 @@ impl std::fmt::Display for ContainerError {
                 write!(f, "No items present in container!"),
             ContainerError::MissingValueError() =>
                 write!(f, "Requested index was None!"),
+            ContainerError::InvalidHandleError() =>
+                write!(f, "Supplied handle was invalid!"),
         }
     }
 }

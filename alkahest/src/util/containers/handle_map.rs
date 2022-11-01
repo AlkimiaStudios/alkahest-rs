@@ -1,4 +1,4 @@
-use crate::trace;
+use super::ContainerError;
 use modular_bitfield::prelude::*;
 
 /// Handle used to access items in a HandleMap
@@ -61,9 +61,7 @@ impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
         if self.freelist_empty() {
             let mut inner_id = Handle::new();
             inner_id.set_index(self.items.len() as u32);
-            trace!("{:?}", inner_id);
             inner_id.set_generation(1);
-            trace!("{:?}", inner_id);
             inner_id.set_item_type(self.item_type);
 
             h = inner_id;
@@ -91,17 +89,17 @@ impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
     }
 
     /// Returns an item from the map, given a Handle
-    pub fn get(&self, handle: Handle) -> T {
-        //TODO: Add range validation
+    pub fn get(&self, handle: Handle) -> Result<T, ContainerError> {
+        self.is_valid(handle)?;
+
         let inner_id = self.handles[handle.index() as usize];
-        return self.items[inner_id.index() as usize].clone();
+        let item = self.items.get(inner_id.index() as usize).ok_or(ContainerError::MissingValueError())?;
+        Ok(item.clone())
     }
 
     /// Removes an item from the map
-    pub fn erase(&mut self, handle: Handle) {
-        if !self.is_valid(handle) {
-            return;
-        }
+    pub fn erase(&mut self, handle: Handle) -> Result<(), ContainerError> {
+        self.is_valid(handle)?;
 
         self.fragmented = true;
 
@@ -130,6 +128,8 @@ impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
             // Fix the inner index of the swapped item
             self.handles[self.meta[inner_index as usize].dense_to_sparse as usize].set_index(inner_index);
         }
+
+        Ok(())
     }
 
     //TODO: Implement clear and defragment functions
@@ -138,16 +138,22 @@ impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
         self.freelist_front == 0xFFFFFFFF
     }
 
-    fn is_valid(&self, handle: Handle) -> bool {
+    fn is_valid(&self, handle: Handle) -> Result<(), ContainerError> {
         if handle.index() >= self.handles.len() as u32 {
-            return false;
+            return Err(ContainerError::InvalidHandleError());
         }
 
-        let inner_id = self.handles[handle.index() as usize];
-        return {
+        let inner_id = self.handles.get(handle.index() as usize).ok_or(ContainerError::InvalidHandleError())?;
+        let valid = {
             inner_id.index() < self.items.len() as u32
             && handle.item_type() == self.item_type
             && handle.generation() == inner_id.generation()
+        };
+
+        if valid {
+            Ok(())
+        } else {
+            Err(ContainerError::InvalidHandleError())
         }
     }
 }
@@ -175,9 +181,18 @@ mod tests {
     fn test_get() {
         let mut map: HandleMap<u32> = HandleMap::new(0, 10);
         let h = map.insert(9999u32);
-        let value = map.get(h);
+        let value = map.get(h).unwrap();
         assert_eq!(value, 9999u32)
     }
 
-    //TODO: Test cases for erasing and bounds-testing
+    #[test]
+    fn test_erase() -> Result<(), &'static str> {
+        let mut map: HandleMap<u32> = HandleMap::new(0, 10);
+        let h = map.insert(9999u32);
+        map.erase(h).unwrap();
+        match map.get(h) {
+            Ok(_) => Err("HandleMap.get succeeded when Handle should have been invalidated!"),
+            Err(e) => Ok(()),
+        }
+    }
 }

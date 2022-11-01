@@ -1,5 +1,5 @@
 use super::{AssetManager, AssetHandle, Asset};
-use crate::util::containers::HandleMap;
+use crate::util::containers::{ContainerError, HandleMap};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
@@ -31,8 +31,7 @@ impl AssetManager<Config> for ConfigManager {
         config
     }
 
-    fn load_from_cache(&self, handle: AssetHandle) -> Config {
-        //TODO: validate bounds
+    fn load_from_cache(&self, handle: AssetHandle) -> Result<Config, ContainerError> {
         self.cache.get(handle)
     }
 

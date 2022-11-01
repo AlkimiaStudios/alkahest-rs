@@ -1,6 +1,8 @@
 mod ring_buffer;
+mod handle_map;
 
 pub use ring_buffer::RingBuffer;
+pub use handle_map::*;
 
 /// Errors used by container structs
 #[derive(Debug)]

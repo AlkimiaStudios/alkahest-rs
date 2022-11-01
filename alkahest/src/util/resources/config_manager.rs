@@ -2,8 +2,16 @@ use super::{AssetManager, AssetHandle, Asset};
 use crate::util::containers::{ContainerError, HandleMap};
 
 #[derive(Clone, Debug)]
+pub(crate) struct WindowConfig {
+    title: String,
+    width: u32,
+    height: u32,
+    hint: String,
+}
+
+#[derive(Clone, Debug)]
 pub(crate) struct Config {
-    value: u32,
+    window: WindowConfig,
 }
 
 impl Asset for Config {}
@@ -19,15 +27,20 @@ impl AssetManager<Config> for ConfigManager {
         }
     }
 
+    //TODO: Maybe return Option<T> from the loading functions???
     fn load_to_cache(&mut self, _path: String) -> AssetHandle {
+        let config: Config;
+
         //TODO: load config from file
-        let config = Config { value: 0 };
+
         self.cache.insert(config)
     }
 
     fn load_direct(_path: String) -> Config {
+        let config: Config;
+
         //TODO: load config from file
-        let config = Config { value: 0 };
+
         config
     }
 
@@ -35,7 +48,7 @@ impl AssetManager<Config> for ConfigManager {
         self.cache.get(handle)
     }
 
-    fn purge_from_cache(&mut self, handle: AssetHandle) {
-        self.cache.erase(handle);
+    fn purge_from_cache(&mut self, handle: AssetHandle) -> Result<(), ContainerError> {
+        self.cache.erase(handle)
     }
 }

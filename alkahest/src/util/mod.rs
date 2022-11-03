@@ -8,6 +8,5 @@ pub(crate) mod context;
 pub mod log;
 /// Contains functions for accessing game input state
 pub mod input;
-pub(crate) mod project;
 /// Contains structs and functions for managing resources.
 pub mod resources;

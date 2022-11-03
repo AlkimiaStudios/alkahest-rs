@@ -3,20 +3,20 @@ use std::path::PathBuf;
 use std::fs;
 use toml;
 
-use crate::trace;
+use alkahest::trace;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct ProjectMetadata {
+pub struct ProjectMetadata {
     pub name: String,
     pub directory: PathBuf,
 }
 
 #[derive(Debug)]
-pub(crate) struct ProjectContext {
+pub struct ProjectContext {
     pub metadata: ProjectMetadata,    
 }
 
-pub(crate) fn init(project_dir: &String) -> Result<ProjectContext, Box<dyn std::error::Error>> {
+pub fn init(project_dir: &String) -> Result<ProjectContext, Box<dyn std::error::Error>> {
     let mut p = PathBuf::from(project_dir);
     // Load the .alkahest/project.toml file for project metadata
     p.push(".alkahest/project.toml");

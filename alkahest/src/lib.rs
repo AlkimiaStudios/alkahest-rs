@@ -11,6 +11,18 @@ pub mod util;
 /// Contains functions used internally for creating a window and rendering context.
 pub(crate) mod window;
 
+/// Game application
+pub trait Application {
+    /// init fn
+    fn init(&mut self);
+    
+    /// update fn
+    fn update(&mut self);
+
+    /// cleanup fn
+    fn cleanup(&mut self);
+}
+
 /// The primary entrypoint for the Alkahest engine.
 ///
 /// When creating an application with Alkahest, import this function
@@ -28,20 +40,20 @@ pub(crate) mod window;
 ///
 /// alkahest::run(init, update, cleanup);
 /// ```
-pub fn run(init: fn() -> (), update: fn() -> (), cleanup: fn() -> ()) {
+pub fn run<T>(app: &mut T) where T: Application {
     error!("This is an error message!");
     warn!("This is a warning message.");
     info!("This is an info message.");
     debug!("This is a debug message.");
     trace!("This is a trace message...");
     let mut context = game::sys_init();
-    init();
+    app.init();
 
     while !context.window_context.window.should_close() {
         game::sys_update(&mut context.window_context);
-        update();
+        app.update();
     }
 
     game::sys_cleanup(context);
-    cleanup();
+    app.cleanup();
 }

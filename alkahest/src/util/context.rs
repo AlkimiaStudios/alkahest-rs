@@ -2,18 +2,25 @@ extern crate glfw;
 
 use super::asynchronous;
 use crate::window;
+use super::config;
+use super::resources::ConfigContext;
 
 pub(crate) struct Context {
     pub window_context: window::WindowContext,
     pub async_context: asynchronous::AsyncContext,
+    pub config_context: ConfigContext,
 }
 
 impl Context {
     pub(crate) fn init() -> Result<Self, Box<dyn std::error::Error>> {
-        // initialize window system
-        let window_context = window::init(1920, 1080, "Alkahest")?;
+        let config_context = config::init();
+        let window_context = window::init(
+            config_context.window.width,
+            config_context.window.height,
+            &config_context.window.title,
+            &config_context.window.hint)?;
         let async_context = asynchronous::init();
 
-        return Ok(Self { window_context, async_context });
+        return Ok(Self { window_context, async_context, config_context });
     }
 }

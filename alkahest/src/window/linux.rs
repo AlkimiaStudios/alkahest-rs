@@ -13,14 +13,14 @@ pub(crate) struct WindowContext {
 
 static mut GLFW_INIT: bool = false;
 
-pub(super) fn init(width: u32, height: u32, name: &str) -> Result<WindowContext, &'static str> {
+pub(super) fn init(width: u32, height: u32, name: &str, hint: &str) -> Result<WindowContext, &'static str> {
     unsafe {
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
         GLFW_INIT = true;
 
         // Add X11 class + instance names
-        glfw.window_hint(glfw::WindowHint::X11ClassName(Some(String::from("alkahest"))));
-        glfw.window_hint(glfw::WindowHint::X11InstanceName(Some(String::from("alkahest"))));
+        glfw.window_hint(glfw::WindowHint::X11ClassName(Some(String::from(hint))));
+        glfw.window_hint(glfw::WindowHint::X11InstanceName(Some(String::from(hint))));
 
         // Create window with OpenGL context
         let (mut window, events) = glfw.create_window(width, height, name, glfw::WindowMode::Windowed)

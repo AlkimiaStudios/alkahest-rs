@@ -12,8 +12,8 @@ pub(crate) use window_impl::WindowContext;
 /// * `name`: &str - Title of the window.
 ///
 /// -> Result<alkahest::window::WindowContext, &'static str>
-pub(crate) fn init(width: u32, height: u32, name: &str) -> Result<WindowContext, &'static str> {
-    window_impl::init(width, height, name)
+pub(crate) fn init(width: u32, height: u32, name: &str, hint: &str) -> Result<WindowContext, &'static str> {
+    window_impl::init(width, height, name, hint)
 }
 
 /// Processes events for the game window.

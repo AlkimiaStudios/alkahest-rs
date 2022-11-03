@@ -65,13 +65,12 @@ pub(crate) fn init() -> AsyncContext {
     let should_stop = Arc::new(AtomicBool::new(false));
     let cv_pair = Arc::new((Mutex::new(false), Condvar::new()));
 
+    trace!("Starting {} worker thread(s)!", thread_count);
     for _ in 0..thread_count {
         let rx_clone: flume::Receiver<Box<dyn Job>> = rx.clone();
         let should_stop_clone = should_stop.clone();
         let cv_pair_clone = cv_pair.clone();
         std::thread::spawn(move ||{
-            trace!("Starting worker thread: {:?}", std::thread::current().id());
-
             while !should_stop_clone.load(Ordering::SeqCst) {
                 match rx_clone.try_recv() {
                     Ok(job) => {

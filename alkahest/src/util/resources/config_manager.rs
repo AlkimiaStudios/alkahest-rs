@@ -1,26 +1,40 @@
 use super::{AssetManager, AssetHandle, Asset};
 use crate::util::containers::{ContainerError, HandleMap};
+use serde_derive::Deserialize;
+use std::fs;
+use toml;
+use crate::trace;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct WindowConfig {
-    title: String,
-    width: u32,
-    height: u32,
-    hint: String,
+    pub title: String,
+    pub width: u32,
+    pub height: u32,
+    pub hint: String,
+}
+impl Default for WindowConfig {
+    fn default() -> Self {
+        WindowConfig {
+            title: String::from("Alkahest"),
+            width: 1920,
+            height: 1080,
+            hint: String::from("alkahest")
+        }
+    }
 }
 
-#[derive(Clone, Debug)]
-pub(crate) struct Config {
-    window: WindowConfig,
+#[derive(Clone, Debug, Default, Deserialize)]
+pub(crate) struct ConfigContext {
+    pub window: WindowConfig,
 }
 
-impl Asset for Config {}
+impl Asset for ConfigContext {}
 
 pub(crate) struct ConfigManager {
-    cache: HandleMap<Config>,
+    cache: HandleMap<ConfigContext>,
 }
 
-impl AssetManager<Config> for ConfigManager {
+impl AssetManager<ConfigContext> for ConfigManager {
     fn init(cache_size: usize) -> ConfigManager {
         ConfigManager {
             cache: HandleMap::new(0, cache_size)
@@ -28,23 +42,37 @@ impl AssetManager<Config> for ConfigManager {
     }
 
     //TODO: Maybe return Option<T> from the loading functions???
-    fn load_to_cache(&mut self, _path: String) -> AssetHandle {
-        let config: Config;
+    fn load_to_cache(&mut self, path: String) -> AssetHandle {
+        let contents = match fs::read_to_string(path) {
+            Ok(c) => c,
+            Err(_) => String::from(""),
+        };
 
-        //TODO: load config from file
+        let config: ConfigContext = match toml::from_str(&contents) {
+            Ok(c) => c,
+            Err(_) => ConfigContext::default(),
+        };
 
         self.cache.insert(config)
     }
 
-    fn load_direct(_path: String) -> Config {
-        let config: Config;
+    fn load_direct(path: String) -> ConfigContext {
+        trace!("Loading config file from: {}", path);
+        let p = std::path::PathBuf::from(path);
+        let contents = match fs::read_to_string(p) {
+            Ok(c) => c,
+            Err(_) => String::from(""),
+        };
 
-        //TODO: load config from file
+        let config: ConfigContext = match toml::from_str(&contents) {
+            Ok(c) => c,
+            Err(_) => ConfigContext::default(),
+        };
 
         config
     }
 
-    fn load_from_cache(&self, handle: AssetHandle) -> Result<Config, ContainerError> {
+    fn load_from_cache(&self, handle: AssetHandle) -> Result<ConfigContext, ContainerError> {
         self.cache.get(handle)
     }
 

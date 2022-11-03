@@ -4,11 +4,13 @@ use super::asynchronous;
 use crate::window;
 use super::config;
 use super::resources::ConfigContext;
+use super::project;
 
 pub(crate) struct Context {
+    pub config_context: ConfigContext,
     pub window_context: window::WindowContext,
     pub async_context: asynchronous::AsyncContext,
-    pub config_context: ConfigContext,
+    pub project_context: project::ProjectContext,
 }
 
 impl Context {
@@ -20,7 +22,8 @@ impl Context {
             &config_context.window.title,
             &config_context.window.hint)?;
         let async_context = asynchronous::init();
+        let project_context = project::init(&String::from("/home/anthony/.alkahest/projects/main/"))?;
 
-        return Ok(Self { window_context, async_context, config_context });
+        return Ok(Self { window_context, async_context, config_context, project_context });
     }
 }

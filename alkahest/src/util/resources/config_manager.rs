@@ -4,7 +4,7 @@ use serde_derive::Deserialize;
 use std::fs;
 use toml;
 use crate::trace;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use string_interner::{StringInterner, DefaultSymbol};
 
 #[derive(Clone, Debug, Deserialize)]
@@ -34,25 +34,28 @@ impl Asset for ConfigContext {}
 
 pub(crate) struct ConfigManager {
     cache: HandleMap<ConfigContext>,
-    file_map: HashSet<DefaultSymbol>,
+    file_map: HashMap<DefaultSymbol, AssetHandle>,
 }
 
 impl AssetManager<ConfigContext> for ConfigManager {
     fn init(cache_size: usize) -> ConfigManager {
         ConfigManager {
             cache: HandleMap::new(0, cache_size),
-            file_map: HashSet::new(),
+            file_map: HashMap::new(),
         }
     }
 
     //TODO: Maybe return Option<T> from the loading functions???
     fn load_to_cache(&mut self, path: String) -> AssetHandle {
         let mut interner = StringInterner::default();
-        if self.file_map.contains(&interner.get_or_intern(&path)) {
-            //TODO: return the AssetHandle of the cached asset
+        let sym = interner.get_or_intern(&path);
+        if self.file_map.contains_key(&sym) {
+            if let Some(handle) = self.file_map.get(&sym) {
+                return handle.clone();
+            }
         }
 
-        let contents = match fs::read_to_string(path) {
+        let contents = match fs::read_to_string(&path) {
             Ok(c) => c,
             Err(_) => String::from(""),
         };
@@ -62,7 +65,9 @@ impl AssetManager<ConfigContext> for ConfigManager {
             Err(_) => ConfigContext::default(),
         };
 
-        self.cache.insert(config)
+        let handle = self.cache.insert(config);
+        self.file_map.insert(interner.get_or_intern(&path), handle);
+        return handle;
     }
 
     fn load_direct(path: String) -> ConfigContext {
@@ -86,6 +91,7 @@ impl AssetManager<ConfigContext> for ConfigManager {
     }
 
     fn purge_from_cache(&mut self, handle: AssetHandle) -> Result<(), ContainerError> {
+        self.file_map.retain(|_, v| *v != handle);
         self.cache.erase(handle)
     }
 }

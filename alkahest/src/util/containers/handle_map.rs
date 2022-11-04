@@ -28,7 +28,7 @@ pub struct HandleMap<T> {
     freelist_back: u32,
 }
 
-impl<T> HandleMap<T> where T: Clone + std::fmt::Debug {
+impl<T> HandleMap<T> where T: Clone {
     /// Creates a new HandleMap with space for `reserve_count` items
     pub fn new(item_type: u16, reserve_count: usize) -> HandleMap<T> {
         let mut h = HandleMap {

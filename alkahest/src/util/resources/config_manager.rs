@@ -4,6 +4,8 @@ use serde_derive::Deserialize;
 use std::fs;
 use toml;
 use crate::trace;
+use std::collections::HashSet;
+use string_interner::{StringInterner, DefaultSymbol};
 
 #[derive(Clone, Debug, Deserialize)]
 pub(crate) struct WindowConfig {
@@ -32,17 +34,24 @@ impl Asset for ConfigContext {}
 
 pub(crate) struct ConfigManager {
     cache: HandleMap<ConfigContext>,
+    file_map: HashSet<DefaultSymbol>,
 }
 
 impl AssetManager<ConfigContext> for ConfigManager {
     fn init(cache_size: usize) -> ConfigManager {
         ConfigManager {
-            cache: HandleMap::new(0, cache_size)
+            cache: HandleMap::new(0, cache_size),
+            file_map: HashSet::new(),
         }
     }
 
     //TODO: Maybe return Option<T> from the loading functions???
     fn load_to_cache(&mut self, path: String) -> AssetHandle {
+        let mut interner = StringInterner::default();
+        if self.file_map.contains(&interner.get_or_intern(&path)) {
+            //TODO: return the AssetHandle of the cached asset
+        }
+
         let contents = match fs::read_to_string(path) {
             Ok(c) => c,
             Err(_) => String::from(""),

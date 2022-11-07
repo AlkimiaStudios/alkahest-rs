@@ -11,49 +11,38 @@ pub mod util;
 /// Contains functions used internally for creating a window and rendering context.
 pub(crate) mod window;
 
-/// Game application
+/// The Application trait enables Alkahest users to define game-side logic
+/// for starting, updating, and cleaning up the game state.
+///
+/// When creating an application with Alkahest, implement this trait on the
+/// struct that will hold your game logic. An instance of that struct will
+/// be passed to the `run` method below, allowing the engine and game to start.
 pub trait Application {
-    /// init fn
+    /// The function used to initialize the game state.
     fn init(&mut self);
     
-    /// update fn
+    /// The function used to update the game state.
     fn update(&mut self);
 
-    /// cleanup fn
+    /// The function used to clean up the game state.
     fn cleanup(&mut self);
 }
 
 /// The primary entrypoint for the Alkahest engine.
-///
-/// When creating an application with Alkahest, import this function
-/// and supply it with the three primary methods of the application:
-/// `init()`, `update()`, and `cleanup()`.
-///
-/// * init: fn() -> () - Function used to initialize application state.
-/// * update: fn() -> () - Function used to update application state.
-/// * cleanup: fn() -> () - Function used to clean up application state.
-///
-/// ```
-/// fn init() {}
-/// fn update() {}
-/// fn cleanup() {}
-///
-/// alkahest::run(init, update, cleanup);
-/// ```
 pub fn run<T>(app: &mut T) where T: Application {
     error!("This is an error message!");
     warn!("This is a warning message.");
     info!("This is an info message.");
     debug!("This is a debug message.");
     trace!("This is a trace message...");
-    let mut context = game::sys_init();
+    let mut engine_context = game::sys_init();
     app.init();
 
-    while !context.window_context.window.should_close() {
-        game::sys_update(&mut context.window_context);
+    while !engine_context.window_context.window.should_close() {
+        game::sys_update(&mut engine_context.window_context);
         app.update();
     }
 
-    game::sys_cleanup(context);
+    game::sys_cleanup(engine_context);
     app.cleanup();
 }

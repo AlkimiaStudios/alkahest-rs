@@ -4,11 +4,13 @@ use super::asynchronous;
 use crate::window;
 use super::config;
 use super::resources::ConfigContext;
+use crate::render::RenderContext;
 
 pub(crate) struct Context {
     pub config_context: ConfigContext,
     pub window_context: window::WindowContext,
     pub async_context: asynchronous::AsyncContext,
+    pub render_context: RenderContext,
 }
 
 impl Context {
@@ -21,6 +23,8 @@ impl Context {
             &config_context.window.hint)?;
         let async_context = asynchronous::init();
 
-        return Ok(Self { window_context, async_context, config_context });
+        let render_context = RenderContext::init();
+
+        return Ok(Self { window_context, async_context, config_context, render_context });
     }
 }

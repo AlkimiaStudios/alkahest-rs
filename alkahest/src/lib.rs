@@ -6,6 +6,7 @@
 
 /// Contains functions used internally for managing the engine runtime.
 pub(crate) mod game;
+pub mod render;
 /// Contains utility functions and structs for use inside and outside the engine.
 pub mod util;
 /// Contains functions used internally for creating a window and rendering context.
@@ -40,6 +41,9 @@ pub fn run<T>(app: &mut T) where T: Application {
 
     while !engine_context.window_context.window.should_close() {
         game::sys_update(&mut engine_context.window_context);
+
+        engine_context.render_context.draw();
+
         app.update();
     }
 

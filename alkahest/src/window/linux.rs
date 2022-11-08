@@ -1,4 +1,5 @@
 extern crate glfw;
+extern crate gl;
 
 use super::super::util::input;
 use crate::trace;
@@ -29,6 +30,8 @@ pub(super) fn init(width: u32, height: u32, name: &str, hint: &str) -> Result<Wi
         // Make the window context current
         window.make_current();
         window.set_all_polling(true);
+
+        gl::load_with(|s| window.get_proc_address(s) as *const _);
 
         // Poll for events
         glfw.poll_events();

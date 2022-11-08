@@ -1,5 +1,7 @@
 mod config_manager;
 pub use config_manager::*;
+mod shader_manager;
+pub use shader_manager::*;
 
 use crate::util::containers::{ContainerError, Handle};
 

@@ -16,7 +16,12 @@ static mut GLFW_INIT: bool = false;
 
 pub(super) fn init(width: u32, height: u32, name: &str, hint: &str) -> Result<WindowContext, &'static str> {
     unsafe {
-        let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+        let glfw = glfw::init(glfw::FAIL_ON_ERRORS);
+        if let Err(_) = glfw {
+            return Err("Failed to initialize GLFW!");
+        }
+
+        let mut glfw = glfw.unwrap_unchecked();
         GLFW_INIT = true;
 
         // Add X11 class + instance names
@@ -24,8 +29,11 @@ pub(super) fn init(width: u32, height: u32, name: &str, hint: &str) -> Result<Wi
         glfw.window_hint(glfw::WindowHint::X11InstanceName(Some(String::from(hint))));
 
         // Create window with OpenGL context
-        let (mut window, events) = glfw.create_window(width, height, name, glfw::WindowMode::Windowed)
-            .expect("Failed to create GLFW window!");
+        let window_result = glfw.create_window(width, height, name, glfw::WindowMode::Windowed);
+        if let None = window_result {
+            return Err("Failed to create window with GLFW!");
+        }
+        let (mut window, events) = window_result.unwrap_unchecked();
 
         // Make the window context current
         window.make_current();

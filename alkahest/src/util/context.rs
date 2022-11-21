@@ -9,7 +9,7 @@ use crate::render::RenderContext;
 pub(crate) struct Context {
     pub config_context: ConfigContext,
     pub window_context: window::WindowContext,
-    pub async_context: asynchronous::AsyncContext,
+    pub async_context:  asynchronous::AsyncContext,
     pub render_context: RenderContext,
 }
 

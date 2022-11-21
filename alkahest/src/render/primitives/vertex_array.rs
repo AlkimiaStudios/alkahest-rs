@@ -4,13 +4,14 @@ use super::VertexBuffer;
 
 pub(crate) struct VertexArray {
     pub id: u32,
+    pub index_count: u32,
 }
 
 impl VertexArray {
     pub unsafe fn new() -> Self {
         let mut id: u32 = 0;
         gl::CreateVertexArrays(1, &mut id);
-        VertexArray { id }
+        VertexArray { id, index_count: 0 }
     }
 
     pub unsafe fn link_attributes<T>(&self,

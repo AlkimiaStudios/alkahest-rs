@@ -1,13 +1,11 @@
-mod vertex_array;
-mod vertex_buffer;
-mod index_buffer;
-mod shader_program;
+mod primitives;
+mod renderer_2d;
 
-use vertex_array::VertexArray;
-use vertex_buffer::VertexBuffer;
-use index_buffer::IndexBuffer;
-use shader_program::ShaderProgram;
-use crate::trace;
+pub(crate) use primitives::VertexArray;
+pub(crate) use primitives::VertexBuffer;
+pub(crate) use primitives::IndexBuffer;
+pub(crate) use primitives::ShaderProgram;
+pub(crate) use renderer_2d::Renderer2D;
 
 #[derive(Debug)]
 pub struct Vertex {
@@ -52,12 +50,13 @@ impl RenderContext {
                 .build();
             s.activate();
 
-            let vao = VertexArray::new();
+            let mut vao = VertexArray::new();
             vao.bind();
 
             let vbo = VertexBuffer::new(vertices);
             let colors = VertexBuffer::new(colors);
 
+            vao.index_count = indices.len() as u32;
             let ebo = IndexBuffer::new(indices);
             ebo.bind();
             
@@ -78,10 +77,7 @@ impl RenderContext {
 
     pub fn draw(&self) {
         unsafe {
-            self.s.activate();
-            self.vao.bind();
-            gl::DrawElements(gl::TRIANGLES, 3, gl::UNSIGNED_INT, 0 as *const _);
-            self.vao.unbind();
+            Renderer2D::draw(&self.vao, &self.s);
         }        
     }
 

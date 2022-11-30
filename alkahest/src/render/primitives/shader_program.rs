@@ -1,7 +1,8 @@
 extern crate gl;
 
+use ultraviolet::Mat4;
 use crate::util::resources::{Shader, ShaderManager, AssetManager};
-use crate::{error, warn, trace};
+use crate::{error, warn, trace, c_str};
 
 #[derive(Debug)]
 pub struct ShaderProgram {
@@ -150,6 +151,11 @@ impl ShaderProgram {
         } else {
             warn!("Tried to activate an unregistered shader program!\n{:?}", self);
         }
+    }
+
+    pub unsafe fn set_uniform_mat4(&self, name: &str, value: &Mat4) {
+        let mat_loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+        gl::UniformMatrix4fv(mat_loc, 1, gl::FALSE, value.as_ptr());
     }
 
     pub unsafe fn deactivate(&self) {

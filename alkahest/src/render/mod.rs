@@ -1,11 +1,12 @@
 mod primitives;
 mod renderer_2d;
+mod command;
 
-pub(crate) use primitives::VertexArray;
-pub(crate) use primitives::VertexBuffer;
-pub(crate) use primitives::IndexBuffer;
-pub(crate) use primitives::ShaderProgram;
+use ultraviolet::Vec3;
 pub(crate) use renderer_2d::Renderer2D;
+pub(crate) use primitives::*;
+pub(crate) use command::*;
+
 
 #[derive(Debug)]
 pub struct Vertex {
@@ -26,12 +27,14 @@ pub(crate) struct RenderContext {
     pub vao: VertexArray,
     pub vbo: VertexBuffer<Vertex>,
     pub ebo: IndexBuffer,
+    pub cam: Camera2D,
 }
 
 impl RenderContext {
     pub fn init() -> Self {
+        let cam = Camera2D::new(-1.6, 1.6, -0.9, 0.9);
         let vertices = vec![
-            Vertex { x: 0.0, y: 0.5, z: 0.0 },
+            Vertex { x: 0.0, y: 0.3, z: 0.0 },
             Vertex { x: -0.5, y: -0.5, z: 0.0 },
             Vertex { x: 0.5, y: -0.5, z: 0.0 },
         ];
@@ -71,13 +74,20 @@ impl RenderContext {
             ebo.unbind();
 
 
-            RenderContext { s, vao, vbo, ebo }
+            RenderContext { s, vao, vbo, ebo, cam }
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&mut self) {
         unsafe {
-            Renderer2D::draw(&self.vao, &self.s);
+            command::set_clear_color(0.3, 0.3, 0.3, 1.);
+            command::clear();
+
+            self.cam.set_position(Vec3 { x: 0.2, y: 0.2, z: 0. });
+            self.cam.set_rotation(Vec3 { x: 0., y: 0., z: 0.5 });
+            self.cam.recalculate_matrices();
+
+            Renderer2D::draw(&self.vao, &self.s, self.cam.get_projection_view_matrix());
         }        
     }
 

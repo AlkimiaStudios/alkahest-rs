@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 glfw = "*"
 gl = "*"
-glm = "*"
+ultraviolet = "*"
 chrono = "*"
 flume = "*"
 modular-bitfield = "*"

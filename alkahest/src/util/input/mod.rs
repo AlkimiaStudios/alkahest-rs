@@ -1,11 +1,13 @@
+use ultraviolet::Vec2;
+
 #[cfg_attr(target_os = "linux", path = "linux.rs")]
 mod input_impl;
 pub use input_impl::{Key, MouseButton};
 
 static mut KEY_STATE: [bool; 121] = [false; 121];
 static mut MOUSE_BUTTON_STATE: [bool; 8] = [false; 8];
-static mut MOUSE_POSITION: glm::Vec2 = glm::Vec2 { x: 0., y: 0. };
-static mut MOUSE_SCROLL: glm::Vec2 = glm::Vec2 { x: 0., y: 0. };
+static mut MOUSE_POSITION: Vec2 = Vec2 { x: 0., y: 0. };
+static mut MOUSE_SCROLL: Vec2 = Vec2 { x: 0., y: 0. };
 
 /// Check if key is pressed
 ///
@@ -65,8 +67,8 @@ pub fn is_mouse_button_up(mb: MouseButton) -> bool {
 
 /// Returns current mouse position
 ///
-/// -> glm::Vec2
-pub fn get_mouse_pos<'a>() -> &'a glm::Vec2 {
+/// -> Vec2
+pub fn get_mouse_pos<'a>() -> &'a Vec2 {
     unsafe {
         return &MOUSE_POSITION;
     }
@@ -74,8 +76,8 @@ pub fn get_mouse_pos<'a>() -> &'a glm::Vec2 {
 
 /// Returns current mouse scroll
 ///
-/// -> glm::Vec2
-pub fn get_mouse_scroll<'a>() -> &'a glm::Vec2 {
+/// -> Vec2
+pub fn get_mouse_scroll<'a>() -> &'a Vec2 {
     unsafe {
         return &MOUSE_SCROLL;
     }

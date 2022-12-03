@@ -6,6 +6,8 @@
 
 /// Contains functions used internally for managing the engine runtime.
 pub(crate) mod game;
+pub use game::Time;
+/// Render stuff
 pub mod render;
 /// Contains utility functions and structs for use inside and outside the engine.
 pub mod util;
@@ -23,7 +25,7 @@ pub trait Application {
     fn init(&mut self);
     
     /// The function used to update the game state.
-    fn update(&mut self);
+    fn update(&mut self, delta: f64);
 
     /// The function used to clean up the game state.
     fn cleanup(&mut self);
@@ -40,11 +42,14 @@ pub fn run<T>(app: &mut T) where T: Application {
     app.init();
 
     while !engine_context.window_context.window.should_close() {
-        game::sys_update(&mut engine_context.window_context);
+        let delta = Time::delta();
+        game::sys_update(delta, &mut engine_context.window_context);
 
         engine_context.render_context.draw();
 
-        app.update();
+        app.update(delta);
+
+        Time::update();
     }
 
     game::sys_cleanup(engine_context);

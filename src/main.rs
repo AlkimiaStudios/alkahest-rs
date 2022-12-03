@@ -12,7 +12,7 @@ impl alkahest::Application for Sandbox {
         self.project = util::project::init(&String::from("/home/anthony/.alkahest/projects/main")).ok();
     }
 
-    fn update(&mut self) {
+    fn update(&mut self, _delta: f64) {
         if input::is_key_down(input::Key::Space) {
             info!("Pressed space!");
         }

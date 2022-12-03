@@ -1,35 +1,32 @@
 extern crate gl;
 use super::primitives::VertexArray;
 use super::primitives::ShaderProgram;
+use super::primitives::Camera;
+use super::command::*;
+use crate::trace;
 use ultraviolet::Mat4;
 
-pub(crate) struct Renderer2D {}
+pub(crate) struct Renderer2D<'a> {
+    camera: &'a dyn Camera,
+}
 
-impl Renderer2D {
-    pub unsafe fn draw_quad(vao: &VertexArray, shader: &ShaderProgram) {
-        shader.activate();
-        vao.bind();
-        gl::DrawArrays(gl::TRIANGLE_STRIP, 0, 4);
-        vao.unbind();
+impl<'a> Renderer2D<'a> {
+    pub fn begin_scene(camera: &'a impl Camera) -> Self {
+        Renderer2D {
+            camera
+        }
     }
 
-    pub unsafe fn draw(vao: &VertexArray, shader: &ShaderProgram, proj_view_mat: &Mat4, model_mat: &Mat4) {
+    pub unsafe fn submit(&self, vao: &VertexArray, shader: &ShaderProgram, transform: &Mat4) {
         shader.activate();
-        shader.set_uniform_mat4("projViewMat", proj_view_mat);
-        shader.set_uniform_mat4("modelMat", model_mat);
+        shader.set_uniform_mat4("projViewMat", self.camera.get_projection_view_matrix());
+        shader.set_uniform_mat4("modelMat", transform);
 
-        vao.bind();
-        gl::DrawElements(gl::TRIANGLES, vao.index_count as i32, gl::UNSIGNED_INT, 0 as *const _);
-        vao.unbind();
+        draw(vao);
 
         shader.deactivate();
     }
 
-    pub unsafe fn draw_textured_quad(vao: &VertexArray) {
-
-    }
-
-    pub unsafe fn draw_text(vao: &VertexArray) {
-
+    pub unsafe fn end(&self) {
     }
 }

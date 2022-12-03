@@ -54,7 +54,7 @@ impl RenderContext {
                 .build();
             s.activate();
 
-            let mut vao = VertexArray::new();
+            let mut vao = VertexArray::new(gl::TRIANGLES);
             vao.bind();
 
             let vbo = VertexBuffer::new(vertices);
@@ -83,7 +83,7 @@ impl RenderContext {
     pub fn draw(&mut self) {
         unsafe {
             command::set_clear_color(0.3, 0.3, 0.3, 1.);
-            command::clear();
+            command::clear(gl::COLOR_BUFFER_BIT);
 
             self.cam.recalculate_matrices();
 
@@ -94,7 +94,11 @@ impl RenderContext {
             self.transform.set_position(Vec3 { x: 0.2, y: 0.2, z: 0. });
             self.transform.set_scale(Vec3 { x: 0.5, y: 0.5, z: 1. });
 
-            Renderer2D::draw(&self.vao, &self.s, self.cam.get_projection_view_matrix(), &self.transform.get_matrix());
+            let scene = Renderer2D::begin_scene(&self.cam);
+
+            scene.submit(&self.vao, &self.s, &self.transform.get_matrix());
+
+            scene.end();
         }        
     }
 

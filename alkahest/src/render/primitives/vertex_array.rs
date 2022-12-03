@@ -2,16 +2,19 @@ extern crate gl;
 use std::ffi::c_void;
 use super::VertexBuffer;
 
+#[derive(Debug)]
 pub(crate) struct VertexArray {
     pub id: u32,
     pub index_count: u32,
+    pub vertex_count: u32,
+    pub draw_method: gl::types::GLenum,
 }
 
 impl VertexArray {
-    pub unsafe fn new() -> Self {
+    pub unsafe fn new(draw_method: gl::types::GLenum) -> Self {
         let mut id: u32 = 0;
         gl::CreateVertexArrays(1, &mut id);
-        VertexArray { id, index_count: 0 }
+        VertexArray { id, index_count: 0, vertex_count: 0, draw_method }
     }
 
     pub unsafe fn link_attributes<T>(&self,

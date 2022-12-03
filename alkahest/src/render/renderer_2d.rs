@@ -13,9 +13,10 @@ impl Renderer2D {
         vao.unbind();
     }
 
-    pub unsafe fn draw(vao: &VertexArray, shader: &ShaderProgram, proj_view_mat: &Mat4) {
+    pub unsafe fn draw(vao: &VertexArray, shader: &ShaderProgram, proj_view_mat: &Mat4, model_mat: &Mat4) {
         shader.activate();
         shader.set_uniform_mat4("projViewMat", proj_view_mat);
+        shader.set_uniform_mat4("modelMat", model_mat);
 
         vao.bind();
         gl::DrawElements(gl::TRIANGLES, vao.index_count as i32, gl::UNSIGNED_INT, 0 as *const _);

@@ -28,6 +28,7 @@ pub(crate) struct RenderContext {
     pub vbo: VertexBuffer<Vertex>,
     pub ebo: IndexBuffer,
     pub cam: Camera2D,
+    pub transform: Transform,
 }
 
 impl RenderContext {
@@ -73,8 +74,9 @@ impl RenderContext {
             colors.unbind();
             ebo.unbind();
 
+            let transform = Transform::new();
 
-            RenderContext { s, vao, vbo, ebo, cam }
+            RenderContext { s, vao, vbo, ebo, cam, transform }
         }
     }
 
@@ -83,11 +85,16 @@ impl RenderContext {
             command::set_clear_color(0.3, 0.3, 0.3, 1.);
             command::clear();
 
-            self.cam.set_position(Vec3 { x: 0.2, y: 0.2, z: 0. });
-            self.cam.set_rotation(Vec3 { x: 0., y: 0., z: 0.5 });
             self.cam.recalculate_matrices();
 
-            Renderer2D::draw(&self.vao, &self.s, self.cam.get_projection_view_matrix());
+            let rotation = self.transform.get_rotation();
+            let rotation = Vec3 { x: rotation.x + 0.005, y: rotation.y, z: rotation.z };
+            self.transform.set_rotation(rotation);
+
+            self.transform.set_position(Vec3 { x: 0.2, y: 0.2, z: 0. });
+            self.transform.set_scale(Vec3 { x: 0.5, y: 0.5, z: 1. });
+
+            Renderer2D::draw(&self.vao, &self.s, self.cam.get_projection_view_matrix(), &self.transform.get_matrix());
         }        
     }
 

@@ -2,7 +2,9 @@ mod primitives;
 mod renderer_2d;
 mod command;
 
-use ultraviolet::Vec3;
+use ultraviolet::{Vec2,Vec3,Vec4};
+use rand::Rng;
+use crate::trace;
 pub(crate) use renderer_2d::Renderer2D;
 pub(crate) use primitives::*;
 pub(crate) use command::*;
@@ -23,61 +25,19 @@ pub struct Color {
 }
 
 pub(crate) struct RenderContext {
-    pub s: ShaderProgram,
-    pub vao: VertexArray,
-    pub vbo: VertexBuffer<Vertex>,
-    pub ebo: IndexBuffer,
     pub cam: Camera2D,
-    pub transform: Transform,
+    pub rotation: f32,
+    pub texture: Texture,
 }
 
 impl RenderContext {
     pub fn init() -> Self {
-        let cam = Camera2D::new(-1.6, 1.6, -0.9, 0.9);
-        let vertices = vec![
-            Vertex { x: 0.0, y: 0.3, z: 0.0 },
-            Vertex { x: -0.5, y: -0.5, z: 0.0 },
-            Vertex { x: 0.5, y: -0.5, z: 0.0 },
-        ];
-        let colors = vec![
-            Color { r: 1.0, g: 0.0, b: 0.0 },
-            Color { r: 0.0, g: 1.0, b: 0.0 },
-            Color { r: 0.0, g: 0.0, b: 1.0 },
-        ];
+        unsafe { Renderer2D::init(); }
 
-        let indices = vec![0, 1, 2];
+        let cam = Camera2D::new(-1.6, 1.5, -0.9, 0.9);
+        let texture = unsafe { Texture::new(String::from("/home/anthony/.alkahest/projects/main/assets/mandark.png"), 0) };
 
-        unsafe {
-            let s = ShaderProgram::new()
-                .with_vert_shader(String::from("/home/anthony/.alkahest/projects/main/shaders/main.vert.glsl"))
-                .with_frag_shader(String::from("/home/anthony/.alkahest/projects/main/shaders/main.frag.glsl"))
-                .build();
-            s.activate();
-
-            let mut vao = VertexArray::new(gl::TRIANGLES);
-            vao.bind();
-
-            let vbo = VertexBuffer::new(vertices);
-            let colors = VertexBuffer::new(colors);
-
-            vao.index_count = indices.len() as u32;
-            let ebo = IndexBuffer::new(indices);
-            ebo.bind();
-            
-            vbo.bind();
-            vao.link_attributes(&vbo, 0, 3, gl::FLOAT, (std::mem::size_of::<Vertex>()) as i32, 0 as *const _);
-            colors.bind();
-            vao.link_attributes(&colors, 1, 3, gl::FLOAT, (std::mem::size_of::<Color>()) as i32, 0 as *const _);
-
-            vao.unbind();
-            vbo.unbind();
-            colors.unbind();
-            ebo.unbind();
-
-            let transform = Transform::new();
-
-            RenderContext { s, vao, vbo, ebo, cam, transform }
-        }
+        RenderContext { cam, rotation: 0., texture }
     }
 
     pub fn draw(&mut self) {
@@ -86,27 +46,35 @@ impl RenderContext {
             command::clear(gl::COLOR_BUFFER_BIT);
 
             self.cam.recalculate_matrices();
+            self.rotation = self.rotation + 0.005;
 
-            let rotation = self.transform.get_rotation();
-            let rotation = Vec3 { x: rotation.x + 0.005, y: rotation.y, z: rotation.z };
-            self.transform.set_rotation(rotation);
+            Renderer2D::begin_scene(&self.cam);
 
-            self.transform.set_position(Vec3 { x: 0.2, y: 0.2, z: 0. });
-            self.transform.set_scale(Vec3 { x: 0.5, y: 0.5, z: 1. });
+            // let mut rng = rand::thread_rng();
+            // for x in 0..100 {
+                // for y in 0..100 {
+                    // let pos = Vec3::new((x as f32 / 100.) - 0.5, (y as f32 / 100.) - 0.5, 0.);
+                    // let color = Vec4::new(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 1.);
+                    // Renderer2D::draw_quad(pos, Vec2::new(0.01, 0.01), 0., color, None);
+                // }
+            // }
 
-            let scene = Renderer2D::begin_scene(&self.cam);
+            for x in 0..10 {
+                for y in 0..10 {
+                    let pos = Vec3::new((x as f32 / 10.) - 0.5, (y as f32 / 10.) - 0.5, 0.);
+                    Renderer2D::draw_quad(pos, Vec2::new(0.1, 0.1), 0., Vec4::new(1.,1.,1.,1.), Some(&self.texture));
+                }
+            }
 
-            scene.submit(&self.vao, &self.s, &self.transform.get_matrix());
+            Renderer2D::draw_quad(Vec3::new(0.2, 0.2, 0.), Vec2::new(0.4, 0.4), self.rotation, Vec4::new(0.8, 0.2, 0.3, 1.), None);
+            Renderer2D::draw_quad(Vec3::new(-0.3, -0.1, 0.), Vec2::new(0.6, 0.3), 0., Vec4::new(0.1, 0.2, 0.7, 1.), None);
+            Renderer2D::draw_quad(Vec3::new(0.6, 0.4, 0.), Vec2::new(0.5, 0.5), 0., Vec4::one(), Some(&self.texture));
 
-            scene.end();
+            Renderer2D::end_scene();
         }        
     }
 
     pub fn cleanup(&self) {
-        unsafe {
-            self.vao.destroy();
-            self.vbo.destroy();
-            self.ebo.destroy();
-        }
+        unsafe { Renderer2D::cleanup(); }
     }
 }

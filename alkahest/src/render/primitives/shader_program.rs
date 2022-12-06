@@ -1,6 +1,6 @@
 extern crate gl;
 
-use ultraviolet::Mat4;
+use ultraviolet::{Vec4,Mat4};
 use crate::util::resources::{Shader, ShaderManager, AssetManager};
 use crate::{error, warn, trace, c_str};
 
@@ -158,6 +158,16 @@ impl ShaderProgram {
         gl::UniformMatrix4fv(mat_loc, 1, gl::FALSE, value.as_ptr());
     }
 
+    pub unsafe fn set_uniform_vec4(&self, name: &str, value: &Vec4) {
+        let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+        gl::Uniform4f(loc, value.x, value.y, value.z, value.w);
+    }
+
+    pub unsafe fn set_uniform_int(&self, name: &str, value: u32) {
+        let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+        gl::Uniform1i(loc, value as i32);
+    }
+    
     pub unsafe fn deactivate(&self) {
         gl::UseProgram(0);
     }

@@ -1,5 +1,7 @@
 mod config_manager;
 pub use config_manager::*;
+mod tex;
+pub use tex::*;
 mod shader_manager;
 pub use shader_manager::*;
 

@@ -65,7 +65,8 @@ impl Camera for Camera2D {
         let transform: Mat4 = Mat4::identity().translated(&self.position);
         let transform = transform * Mat4::from_rotation_z(self.rotation.z); 
 
-        self.view_matrix = transform.inversed();
+        // self.view_matrix = transform.inversed();
+        self.view_matrix = transform;
         self.projection_view_matrix = self.projection_matrix * self.view_matrix;
     }
 

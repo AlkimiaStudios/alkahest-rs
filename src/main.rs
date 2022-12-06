@@ -12,10 +12,12 @@ impl alkahest::Application for Sandbox {
         self.project = util::project::init(&String::from("/home/anthony/.alkahest/projects/main")).ok();
     }
 
-    fn update(&mut self, _delta: f64) {
+    fn update(&mut self, delta: f64) {
         if input::is_key_down(input::Key::Space) {
             info!("Pressed space!");
         }
+
+        trace!("FPS: {}", (1./delta) as u32);
     }
 
     fn cleanup(&mut self) {

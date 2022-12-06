@@ -22,6 +22,21 @@ impl<T> VertexBuffer<T> {
         VertexBuffer { id, data: PhantomData }
     }
 
+    pub unsafe fn new_from_arr(vertices: &[T]) -> Self {
+        let mut id: u32 = 0;
+        gl::GenBuffers(1, &mut id);
+
+        gl::BindBuffer(gl::ARRAY_BUFFER, id);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (vertices.len() * std::mem::size_of::<T>()) as isize,
+            vertices.as_ptr().cast(),
+            gl::STATIC_DRAW);
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+        VertexBuffer { id, data: PhantomData }
+    }
+
     pub unsafe fn bind(&self) {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
     }

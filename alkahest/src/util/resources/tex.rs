@@ -53,6 +53,7 @@ impl AssetManager<TextureData> for TextureManager {
     }
 
     fn load_direct(path: String) -> TextureData {
+        //TODO: factor out unwrap call
         let img = image::open(&path).unwrap().into_rgba8();
 
         TextureData {

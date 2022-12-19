@@ -14,6 +14,7 @@ impl Transform {
             scale: Vec3::one(),
         }
     }
+
     pub fn get_matrix(&self) -> Mat4 {
         // Translation is easy
         let translation: Mat4 = Mat4::identity().translated(&self.position);

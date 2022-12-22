@@ -50,14 +50,14 @@ impl RenderContext {
 
             Renderer2D::begin_scene(&self.cam);
 
-            // let mut rng = rand::thread_rng();
-            // for x in 0..100 {
-                // for y in 0..100 {
-                    // let pos = Vec3::new((x as f32 / 100.) - 0.5, (y as f32 / 100.) - 0.5, 0.);
-                    // let color = Vec4::new(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 1.);
-                    // Renderer2D::draw_quad(pos, Vec2::new(0.01, 0.01), 0., color, None);
-                // }
-            // }
+            let mut rng = rand::thread_rng();
+            for x in 0..100 {
+                for y in 0..100 {
+                    let pos = Vec3::new((x as f32 / 100.) - 0.5, (y as f32 / 100.) - 0.5, 0.);
+                    let color = Vec4::new(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 1.);
+                    Renderer2D::draw_quad(pos, Vec2::new(0.01, 0.01), 0., color, None);
+                }
+            }
 
             for x in 0..10 {
                 for y in 0..10 {

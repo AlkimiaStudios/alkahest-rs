@@ -1,5 +1,6 @@
 extern crate gl;
 
+#[derive(Debug)]
 pub(crate) struct IndexBuffer {
     pub id: u32,
 }
@@ -35,8 +36,29 @@ impl IndexBuffer {
         IndexBuffer { id }
     }
 
+    pub unsafe fn dynamic_new(count: usize) -> Self {
+        let mut id: u32 = 0;
+        gl::GenBuffers(1, &mut id);
+
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, id);
+        gl::BufferData(
+            gl::ELEMENT_ARRAY_BUFFER,
+            (count * 4) as isize,
+            0 as *const _,
+            gl::DYNAMIC_DRAW);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
+
+        IndexBuffer { id }
+    }
+
     pub unsafe fn bind(&self) {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
+    }
+
+    pub unsafe fn set_data(&self, data: &Vec<u32>, count: usize) {
+        self.bind();
+        gl::BufferSubData(gl::ELEMENT_ARRAY_BUFFER, 0, (count * 4) as isize, data.as_ptr().cast());
+        self.unbind();
     }
 
     pub unsafe fn unbind(&self) {

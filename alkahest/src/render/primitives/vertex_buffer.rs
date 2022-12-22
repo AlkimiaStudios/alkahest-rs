@@ -1,6 +1,7 @@
 extern crate gl;
 use std::marker::PhantomData;
 
+#[derive(Debug)]
 pub(crate) struct VertexBuffer<T> {
     pub id: u32,
     data: PhantomData<T>,
@@ -37,8 +38,29 @@ impl<T> VertexBuffer<T> {
         VertexBuffer { id, data: PhantomData }
     }
 
+    pub unsafe fn dynamic_new(count: usize) -> Self {
+        let mut id: u32 = 0;
+        gl::GenBuffers(1, &mut id);
+
+        gl::BindBuffer(gl::ARRAY_BUFFER, id);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (count * std::mem::size_of::<T>()) as isize,
+            0 as *const _,
+            gl::DYNAMIC_DRAW);
+        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+        VertexBuffer { id, data: PhantomData }
+    }
+
     pub unsafe fn bind(&self) {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
+    }
+
+    pub unsafe fn set_data(&self, data: &Vec<T>, count: usize) {
+        self.bind();
+        gl::BufferSubData(gl::ARRAY_BUFFER, 0, (count * std::mem::size_of::<T>()) as isize, data.as_ptr().cast());
+        self.unbind();
     }
 
     pub unsafe fn unbind(&self) {

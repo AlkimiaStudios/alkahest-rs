@@ -1,6 +1,7 @@
 extern crate gl;
 use super::primitives::VertexArray;
 use super::primitives::VertexBuffer;
+use super::primitives::IndexBuffer;
 use super::primitives::ShaderProgram;
 use super::primitives::Texture;
 use super::primitives::Camera;
@@ -17,26 +18,44 @@ static mut SCENE_DATA: Option<SceneData2D> = None;
 
 #[derive(Debug)]
 struct Renderer2DContext {
-    pub quad_vao: VertexArray,
+    pub vao: VertexArray,
+    pub positions: VertexBuffer<Vec3>,
+    pub tex_coords: VertexBuffer<Vec2>,
+    pub tex_ids: VertexBuffer<u32>,
+    pub colors: VertexBuffer<Vec4>,
+    pub ebo: IndexBuffer,
     pub shader: ShaderProgram,
     pub default_texture: Texture,
+
+    pub position_data: Vec<Vec3>,
+    pub tex_coord_data: Vec<Vec2>,
+    pub tex_id_data: Vec<u32>,
+    pub color_data: Vec<Vec4>,
+    pub indices: Vec<u32>,
+
+    pub vertex_count: usize,
+    pub index_count: usize,
 }
 
 static mut RENDER_CONTEXT: Option<Renderer2DContext> = None;
 
-const QUAD_VERTICES: [Vec3; 4] = [
-    Vec3::new(-0.5,  0.5, 0.), // top left
-    Vec3::new( 0.5,  0.5, 0.), // top right
-    Vec3::new(-0.5, -0.5, 0.), // bottom left
-    Vec3::new( 0.5, -0.5, 0.), // bottom right
+const QUAD_VERTICES: [Vec4; 4] = [
+    Vec4::new(-0.5,  0.5, 0., 0.), // top left
+    Vec4::new( 0.5,  0.5, 0., 0.), // top right
+    Vec4::new(-0.5, -0.5, 0., 0.), // bottom left
+    Vec4::new( 0.5, -0.5, 0., 0.), // bottom right
 ];
 
-const QUAD_TEX_COORDS: [Vec2; 4] = [
-    Vec2::new(0., 0.), // top left
-    Vec2::new(1., 0.), // top right
-    Vec2::new(0., 1.), // bottom left
-    Vec2::new(1., 1.), // bottom right
-];
+// const QUAD_TEX_COORDS: [Vec2; 4] = [
+    // Vec2::new(0., 0.), // top left
+    // Vec2::new(1., 0.), // top right
+    // Vec2::new(0., 1.), // bottom left
+    // Vec2::new(1., 1.), // bottom right
+// ];
+
+const MAX_QUADS: usize = 10000;
+const MAX_VERTICES: usize = MAX_QUADS * 4;
+const MAX_INDICES: usize = MAX_QUADS * 6;
 
 const DEFAULT_TEX_BYTES: [u8; 4] = [255,255,255,255];
 
@@ -49,25 +68,39 @@ impl Renderer2D {
             .with_frag_shader(String::from("/home/anthony/.alkahest/projects/main/shaders/quad.frag.glsl"))
             .build();
 
-        let mut vao = VertexArray::new(gl::TRIANGLE_STRIP);
+        let vao = VertexArray::new(gl::TRIANGLES);
         vao.bind();
 
-        let vbo = VertexBuffer::new_from_arr(&QUAD_VERTICES);
-        let tex = VertexBuffer::new_from_arr(&QUAD_TEX_COORDS);
-        vao.vertex_count = 4;
-        
-        vbo.bind();
-        vao.link_attributes(&vbo, 0, 3, gl::FLOAT, (std::mem::size_of::<Vec3>()) as i32, 0 as *const _);
-        tex.bind();
-        vao.link_attributes(&tex, 1, 2, gl::FLOAT, (std::mem::size_of::<Vec2>()) as i32, 0 as *const _);
+        let positions = VertexBuffer::<Vec3>::dynamic_new(MAX_VERTICES);
+        let tex_coords = VertexBuffer::<Vec2>::dynamic_new(MAX_VERTICES);
+        let tex_ids = VertexBuffer::<u32>::dynamic_new(MAX_VERTICES);
+        let colors = VertexBuffer::<Vec4>::dynamic_new(MAX_VERTICES);
+
+        let ebo = IndexBuffer::dynamic_new(MAX_INDICES);
+        ebo.bind();
+
+        positions.bind();
+        vao.link_attributes(&positions, 0, 3, gl::FLOAT, (std::mem::size_of::<Vec3>()) as i32, 0 as *const _);
+        tex_coords.bind();
+        vao.link_attributes(&tex_coords, 1, 2, gl::FLOAT, (std::mem::size_of::<Vec2>()) as i32, 0 as *const _);
+        tex_ids.bind();
+        vao.link_attributes(&tex_ids, 2, 1, gl::UNSIGNED_INT, (std::mem::size_of::<u32>()) as i32, 0 as *const _);
+        colors.bind();
+        vao.link_attributes(&colors, 3, 4, gl::FLOAT, (std::mem::size_of::<Vec4>()) as i32, 0 as *const _);
 
         vao.unbind();
-        vbo.unbind();
-        tex.unbind();
+        colors.unbind();
+        ebo.unbind();
+
+        let position_data: Vec<Vec3> = vec![Vec3::zero(); MAX_VERTICES];
+        let tex_coord_data: Vec<Vec2> = vec![Vec2::zero(); MAX_VERTICES];
+        let tex_id_data: Vec<u32> = vec![0; MAX_VERTICES];
+        let color_data: Vec<Vec4> = vec![Vec4::zero(); MAX_VERTICES];
+        let indices: Vec<u32> = vec![0; MAX_INDICES];
 
         let default_texture = Texture::new_from_data(TextureData { bytes: DEFAULT_TEX_BYTES.to_vec(), width: 1, height: 1 }, 0 );
 
-        RENDER_CONTEXT = Some(Renderer2DContext { quad_vao: vao, shader, default_texture });
+        RENDER_CONTEXT = Some(Renderer2DContext { vao, positions, tex_coords, tex_ids, colors, ebo, shader, default_texture, position_data, tex_coord_data, tex_id_data, color_data, indices, vertex_count: 0, index_count: 0 });
     }
 
     pub unsafe fn begin_scene(camera: &impl Camera) {
@@ -87,28 +120,54 @@ impl Renderer2D {
     }
 
     pub unsafe fn draw_quad(position: Vec3, size: Vec2, rotation: f32, color: Vec4, texture: Option<&Texture>) {
-        if let Some(context) = &RENDER_CONTEXT {
+        if let Some(context) = &mut RENDER_CONTEXT {
             if let Some(_scene_data) = &SCENE_DATA {
-                let shader = &context.shader;
-                let tex = texture.unwrap_or(&context.default_texture);
-                shader.activate();
-
-                // Compute transform from pos/size/rotation
+                // calculate transform
                 let transform: Mat4 = Mat4::identity().translated(&position);
                 let transform = transform * Mat4::from_rotation_z(rotation);
                 let transform = transform * Mat4::from_nonuniform_scale(Vec3::new(size.x, size.y, 1.));
-                shader.set_uniform_mat4("modelMat", &transform);
+                
+                // apply transform to position data
+                // and set position data for 4 vertices starting at vertex_count
+                context.position_data[context.vertex_count]     = (transform * Vec4::new(-0.5,  0.5, 0., 1.)).xyz();
+                context.position_data[context.vertex_count + 1] = (transform * Vec4::new( 0.5,  0.5, 0., 1.)).xyz();
+                context.position_data[context.vertex_count + 2] = (transform * Vec4::new(-0.5, -0.5, 0., 1.)).xyz();
+                context.position_data[context.vertex_count + 3] = (transform * Vec4::new( 0.5, -0.5, 0., 1.)).xyz();
 
-                shader.set_uniform_vec4("quadColor", &color);
+                // set tex_coord data
+                context.tex_coord_data[context.vertex_count]     = Vec2::new(0., 0.);
+                context.tex_coord_data[context.vertex_count + 1] = Vec2::new(1., 0.);
+                context.tex_coord_data[context.vertex_count + 2] = Vec2::new(0., 1.);
+                context.tex_coord_data[context.vertex_count + 3] = Vec2::new(1., 1.);
 
-                tex.bind();
-                shader.set_uniform_int("quadTexture", tex.slot);
+                // set tex_id???
+                context.tex_id_data[context.vertex_count] = 0;
+                context.tex_id_data[context.vertex_count + 1] = 0;
+                context.tex_id_data[context.vertex_count + 2] = 0;
+                context.tex_id_data[context.vertex_count + 3] = 0;
 
-                draw(&context.quad_vao);
+                // set color data
+                context.color_data[context.vertex_count] = color;
+                context.color_data[context.vertex_count + 1] = color;
+                context.color_data[context.vertex_count + 2] = color;
+                context.color_data[context.vertex_count + 3] = color;
 
-                tex.unbind();
+                // set index data for 6 indices starting at index_count
+                context.indices[context.index_count] = context.vertex_count as u32;
+                context.indices[context.index_count + 1] = context.vertex_count as u32 + 1;
+                context.indices[context.index_count + 2] = context.vertex_count as u32 + 2;
+                context.indices[context.index_count + 3] = context.vertex_count as u32 + 1;
+                context.indices[context.index_count + 4] = context.vertex_count as u32 + 2;
+                context.indices[context.index_count + 5] = context.vertex_count as u32 + 3;
 
-                shader.deactivate();
+                // Increment vertex and index count
+                context.vertex_count = context.vertex_count + 4;
+                context.index_count = context.index_count + 6;
+                
+                if context.vertex_count >= MAX_VERTICES {
+                    Renderer2D::flush();
+                    Renderer2D::execute();
+                }
             }
             else {
                 error!("Renderer2D cannot render without a current scene!");
@@ -121,6 +180,37 @@ impl Renderer2D {
 
     pub unsafe fn end_scene() {
         SCENE_DATA = None;
+
+        Renderer2D::flush();
+        Renderer2D::execute();
+    }
+
+    unsafe fn flush() {
+        if let Some(context) = &mut RENDER_CONTEXT {
+            context.positions.set_data(&context.position_data, context.vertex_count);
+            context.tex_coords.set_data(&context.tex_coord_data, context.vertex_count);
+            context.tex_ids.set_data(&context.tex_id_data, context.vertex_count);
+            context.colors.set_data(&context.color_data, context.vertex_count);
+
+            context.ebo.set_data(&context.indices, context.index_count);
+
+            context.vao.vertex_count = context.vertex_count as u32;
+            context.vao.index_count = context.index_count as u32;
+
+            context.vertex_count = 0;
+            context.index_count = 0;
+        }                
+    }
+
+    unsafe fn execute() {
+        if let Some(context) = &RENDER_CONTEXT {
+            context.shader.activate();
+
+            trace!("Sending batch of {} quads to GPU", context.vao.vertex_count / 4);
+            draw(&context.vao);
+
+            context.shader.deactivate();
+        }
     }
 
     pub unsafe fn cleanup() {

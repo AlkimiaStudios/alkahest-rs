@@ -32,9 +32,11 @@ struct Renderer2DContext {
     pub tex_id_data: Vec<u32>,
     pub color_data: Vec<Vec4>,
     pub indices: Vec<u32>,
+    pub textures: [Option<Texture>; MAX_TEXTURES],
 
     pub vertex_count: usize,
     pub index_count: usize,
+    pub texture_count: usize,
 }
 
 static mut RENDER_CONTEXT: Option<Renderer2DContext> = None;
@@ -56,6 +58,7 @@ const QUAD_VERTICES: [Vec4; 4] = [
 const MAX_QUADS: usize = 10000;
 const MAX_VERTICES: usize = MAX_QUADS * 4;
 const MAX_INDICES: usize = MAX_QUADS * 6;
+const MAX_TEXTURES: usize = 32;
 
 const DEFAULT_TEX_BYTES: [u8; 4] = [255,255,255,255];
 
@@ -98,9 +101,11 @@ impl Renderer2D {
         let color_data: Vec<Vec4> = vec![Vec4::zero(); MAX_VERTICES];
         let indices: Vec<u32> = vec![0; MAX_INDICES];
 
-        let default_texture = Texture::new_from_data(TextureData { bytes: DEFAULT_TEX_BYTES.to_vec(), width: 1, height: 1 }, 0 );
+        let default_texture = Texture::new_from_data(TextureData { bytes: DEFAULT_TEX_BYTES.to_vec(), width: 1, height: 1 });
+        let mut textures: [Option<Texture>; MAX_TEXTURES] = [None; MAX_TEXTURES];
+        textures[0] = Some(default_texture);
 
-        RENDER_CONTEXT = Some(Renderer2DContext { vao, positions, tex_coords, tex_ids, colors, ebo, shader, default_texture, position_data, tex_coord_data, tex_id_data, color_data, indices, vertex_count: 0, index_count: 0 });
+        RENDER_CONTEXT = Some(Renderer2DContext { vao, positions, tex_coords, tex_ids, colors, ebo, shader, default_texture, position_data, tex_coord_data, tex_id_data, color_data, indices, textures, vertex_count: 0, index_count: 0, texture_count: 1 });
     }
 
     pub unsafe fn begin_scene(camera: &impl Camera) {
@@ -111,6 +116,13 @@ impl Renderer2D {
 
             context.shader.activate();
             context.shader.set_uniform_mat4("projViewMat", &data.camera_matrix);
+
+            // let mut texture_slots: Vec<u32> = vec![0; MAX_TEXTURES];
+            // for i in 0..MAX_TEXTURES {
+                // texture_slots[i] = i as u32;    
+            // }
+
+            // context.shader.set_uniform_int_arr("textureSlots", &texture_slots, MAX_TEXTURES);
 
             SCENE_DATA = Some(data);
         }
@@ -140,11 +152,33 @@ impl Renderer2D {
                 context.tex_coord_data[context.vertex_count + 2] = Vec2::new(0., 1.);
                 context.tex_coord_data[context.vertex_count + 3] = Vec2::new(1., 1.);
 
-                // set tex_id???
-                context.tex_id_data[context.vertex_count] = 0;
-                context.tex_id_data[context.vertex_count + 1] = 0;
-                context.tex_id_data[context.vertex_count + 2] = 0;
-                context.tex_id_data[context.vertex_count + 3] = 0;
+                // set tex_id
+                let mut tex_id: u32 = 0;
+                if let Some(tex) = texture {
+                    // context.shader.activate();
+                    // tex.bind(1);
+                    // context.shader.set_uniform_int("quadTex", 1);
+                    for i in 1..context.texture_count {
+                        if let Some(existing_tex) = context.textures[i] {
+                            if existing_tex.id == tex.id {
+                                tex_id = i as u32;
+                            }
+                        }
+                    }
+                    // No matching textures
+                    if tex_id == 0 {
+                        context.textures[context.texture_count] = Some(tex.clone());
+                        tex_id = context.texture_count as u32;
+                        context.texture_count = context.texture_count + 1;
+                        trace!("TextureCount: {}", context.texture_count);
+                    }
+                }
+                trace!("TexID: {}", tex_id);
+
+                context.tex_id_data[context.vertex_count] = tex_id;
+                context.tex_id_data[context.vertex_count + 1] = tex_id;
+                context.tex_id_data[context.vertex_count + 2] = tex_id;
+                context.tex_id_data[context.vertex_count + 3] = tex_id;
 
                 // set color data
                 context.color_data[context.vertex_count] = color;
@@ -205,6 +239,22 @@ impl Renderer2D {
     unsafe fn execute() {
         if let Some(context) = &RENDER_CONTEXT {
             context.shader.activate();
+
+            for i in 0..context.texture_count {
+                if let Some(tex) = context.textures[i] {
+                    tex.bind(i as u32);
+                } else {
+                    context.default_texture.bind(i as u32);
+                }
+            }
+            trace!("Texture count: {}", context.texture_count);
+
+            let mut texture_slots: Vec<u32> = vec![0; MAX_TEXTURES];
+            for i in 0..MAX_TEXTURES {
+                texture_slots[i] = i as u32;    
+            }
+
+            context.shader.set_uniform_int_arr("textureSlots", &texture_slots, MAX_TEXTURES);
 
             trace!("Sending batch of {} quads to GPU", context.vao.vertex_count / 4);
             draw(&context.vao);

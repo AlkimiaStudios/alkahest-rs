@@ -3,21 +3,20 @@ extern crate gl;
 use crate::util::resources::{AssetManager, TextureData, TextureManager};
 use crate::trace;
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Texture {
     pub id: u32,
-    pub slot: u32,
 }
 
 impl Texture {
-    pub unsafe fn new(path: String, slot: u32) -> Self {
+    pub unsafe fn new(path: String) -> Self {
         let tex_data = TextureManager::load_direct(path);
 
         let mut id: u32 = 0;
         gl::GenTextures(1, &mut id);
 
         // Assign texture to a texture unit
-        gl::ActiveTexture(gl::TEXTURE0 + slot);
+        gl::ActiveTexture(gl::TEXTURE0);
         gl::BindTexture(gl::TEXTURE_2D, id);
 
         // Configure scaling algorithms
@@ -34,15 +33,15 @@ impl Texture {
         // unbind texture so it can't be changed anymore
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
-        Texture { id, slot }
+        Texture { id }
     }
 
-    pub unsafe fn new_from_data(data: TextureData, slot: u32) -> Self {
+    pub unsafe fn new_from_data(data: TextureData) -> Self {
         let mut id: u32 = 0;
         gl::GenTextures(1, &mut id);
 
         // Assign texture to a texture unit
-        gl::ActiveTexture(gl::TEXTURE0 + slot);
+        gl::ActiveTexture(gl::TEXTURE0);
         gl::BindTexture(gl::TEXTURE_2D, id);
 
         // Configure scaling algorithms
@@ -59,11 +58,12 @@ impl Texture {
         // unbind texture so it can't be changed anymore
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
-        Texture { id, slot }
+        Texture { id }
     }
 
-    pub unsafe fn bind(&self) {
-        gl::ActiveTexture(gl::TEXTURE0 + self.slot);
+    pub unsafe fn bind(&self, slot: u32) {
+        trace!("Binding {:?} to slot {}", self, slot);
+        gl::ActiveTexture(gl::TEXTURE0 + slot);
         gl::BindTexture(gl::TEXTURE_2D, self.id);
     }
 

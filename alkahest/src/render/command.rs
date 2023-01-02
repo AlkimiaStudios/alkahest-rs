@@ -2,12 +2,21 @@ extern crate gl;
 
 use crate::render::VertexArray;
 use crate::{trace, error};
+use gl::types::*;
+
+pub(crate) unsafe fn enable(cap: GLenum) {
+    gl::Enable(cap);
+}
+
+pub(crate) unsafe fn set_blend_func(s_factor: GLenum, d_factor: GLenum) {
+    gl::BlendFunc(s_factor, d_factor);
+}
 
 pub(crate) unsafe fn set_clear_color(r: f32, g: f32, b: f32, a: f32) {
     gl::ClearColor(r, g, b, a);
 }
 
-pub(crate) unsafe fn clear(mask: gl::types::GLbitfield) {
+pub(crate) unsafe fn clear(mask: GLbitfield) {
     gl::Clear(mask);
 }
 

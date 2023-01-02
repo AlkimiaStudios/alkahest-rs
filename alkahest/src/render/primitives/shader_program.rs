@@ -167,6 +167,11 @@ impl ShaderProgram {
         let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
         gl::Uniform1i(loc, value as i32);
     }
+
+    pub unsafe fn set_uniform_int_arr(&self, name: &str, values: &Vec<u32>, count: usize) {
+        let loc = gl::GetUniformLocation(self.id, c_str!(name).as_ptr().cast());
+        gl::Uniform1iv(loc, count as i32, values.as_ptr().cast());
+    }
     
     pub unsafe fn deactivate(&self) {
         gl::UseProgram(0);

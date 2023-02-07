@@ -1,3 +1,4 @@
+mod batch;
 mod index_buffer;
 mod vertex_buffer;
 mod vertex_array;
@@ -6,6 +7,7 @@ mod camera;
 mod transform;
 mod texture;
 
+pub(crate) use batch::*;
 pub(crate) use index_buffer::*;
 pub(crate) use vertex_buffer::*;
 pub(crate) use vertex_array::*;

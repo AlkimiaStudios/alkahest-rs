@@ -173,7 +173,6 @@ impl Renderer2D {
                         trace!("TextureCount: {}", context.texture_count);
                     }
                 }
-                trace!("TexID: {}", tex_id);
 
                 context.tex_id_data[context.vertex_count] = tex_id;
                 context.tex_id_data[context.vertex_count + 1] = tex_id;
@@ -221,12 +220,12 @@ impl Renderer2D {
 
     unsafe fn flush() {
         if let Some(context) = &mut RENDER_CONTEXT {
-            context.positions.set_data(&context.position_data, context.vertex_count);
-            context.tex_coords.set_data(&context.tex_coord_data, context.vertex_count);
-            context.tex_ids.set_data(&context.tex_id_data, context.vertex_count);
-            context.colors.set_data(&context.color_data, context.vertex_count);
+            context.positions.set_data(&context.position_data, context.vertex_count, 0);
+            context.tex_coords.set_data(&context.tex_coord_data, context.vertex_count, 0);
+            context.tex_ids.set_data(&context.tex_id_data, context.vertex_count, 0);
+            context.colors.set_data(&context.color_data, context.vertex_count, 0);
 
-            context.ebo.set_data(&context.indices, context.index_count);
+            context.ebo.set_data(&context.indices, context.index_count, 0);
 
             context.vao.vertex_count = context.vertex_count as u32;
             context.vao.index_count = context.index_count as u32;
@@ -247,7 +246,6 @@ impl Renderer2D {
                     context.default_texture.bind(i as u32);
                 }
             }
-            trace!("Texture count: {}", context.texture_count);
 
             let mut texture_slots: Vec<u32> = vec![0; MAX_TEXTURES];
             for i in 0..MAX_TEXTURES {
@@ -256,7 +254,6 @@ impl Renderer2D {
 
             context.shader.set_uniform_int_arr("textureSlots", &texture_slots, MAX_TEXTURES);
 
-            trace!("Sending batch of {} quads to GPU", context.vao.vertex_count / 4);
             draw(&context.vao);
 
             context.shader.deactivate();

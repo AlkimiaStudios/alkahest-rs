@@ -1,6 +1,8 @@
 mod primitives;
 mod renderer_2d;
+mod ui_renderer;
 mod command;
+pub mod ui;
 
 use ultraviolet::{Vec2,Vec3,Vec4};
 use rand::Rng;
@@ -8,6 +10,7 @@ use crate::trace;
 pub(crate) use renderer_2d::Renderer2D;
 pub(crate) use primitives::*;
 pub(crate) use command::*;
+pub(crate) use ui_renderer::*;
 
 
 #[derive(Debug)]
@@ -32,7 +35,7 @@ pub(crate) struct RenderContext {
 
 impl RenderContext {
     pub fn init() -> Self {
-        unsafe { Renderer2D::init(); }
+        unsafe { Renderer2D::init(); UIRenderer::init(); }
 
         let cam = Camera2D::new(-1.6, 1.5, -0.9, 0.9);
         let texture = unsafe { Texture::new(String::from("/home/anthony/.alkahest/projects/main/assets/mandark.png")) };
@@ -73,10 +76,15 @@ impl RenderContext {
             Renderer2D::draw_quad(Vec3::new(0.6, 0.4, 0.), Vec2::new(0.5, 0.5), 0., Vec4::new(1., 1., 1., 1.), Some(&self.texture));
 
             Renderer2D::end_scene();
+
+            UIRenderer::begin_scene(&self.cam);
+            let panel = ui::UIPanel::new(Vec2::new(0., 0.), Vec2::new(0.5, 0.5), 0., Vec4::new(0.2, 0.2, 0.2, 1.), None);
+            UIRenderer::draw_panel(&panel);
+            UIRenderer::end_scene();
         }        
     }
 
     pub fn cleanup(&self) {
-        unsafe { Renderer2D::cleanup(); }
+        unsafe { Renderer2D::cleanup(); UIRenderer::cleanup(); }
     }
 }

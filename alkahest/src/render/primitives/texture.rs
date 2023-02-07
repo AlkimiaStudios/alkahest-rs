@@ -62,7 +62,7 @@ impl Texture {
     }
 
     pub unsafe fn bind(&self, slot: u32) {
-        trace!("Binding {:?} to slot {}", self, slot);
+        // trace!("Binding {:?} to slot {}", self, slot);
         gl::ActiveTexture(gl::TEXTURE0 + slot);
         gl::BindTexture(gl::TEXTURE_2D, self.id);
     }

@@ -55,9 +55,9 @@ impl IndexBuffer {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
     }
 
-    pub unsafe fn set_data(&self, data: &Vec<u32>, count: usize) {
+    pub unsafe fn set_data(&self, data: &Vec<u32>, count: usize, offset: usize) {
         self.bind();
-        gl::BufferSubData(gl::ELEMENT_ARRAY_BUFFER, 0, (count * 4) as isize, data.as_ptr().cast());
+        gl::BufferSubData(gl::ELEMENT_ARRAY_BUFFER, offset as isize, (count * 4) as isize, data.as_ptr().cast());
         self.unbind();
     }
 

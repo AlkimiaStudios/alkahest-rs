@@ -57,9 +57,9 @@ impl<T> VertexBuffer<T> {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
     }
 
-    pub unsafe fn set_data(&self, data: &Vec<T>, count: usize) {
+    pub unsafe fn set_data(&self, data: &Vec<T>, count: usize, offset: usize) {
         self.bind();
-        gl::BufferSubData(gl::ARRAY_BUFFER, 0, (count * std::mem::size_of::<T>()) as isize, data.as_ptr().cast());
+        gl::BufferSubData(gl::ARRAY_BUFFER, offset as isize, (count * std::mem::size_of::<T>()) as isize, data.as_ptr().cast());
         self.unbind();
     }
 

@@ -111,6 +111,8 @@ impl UIRenderer {
     }
 
     pub fn draw_tree(root: &UIRoot) {
+        // TODO: Draw non-overlapping panels in same batch
+
         todo!();
     }
 

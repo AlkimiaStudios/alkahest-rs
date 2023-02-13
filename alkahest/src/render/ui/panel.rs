@@ -43,9 +43,12 @@ pub struct UIPanel<'a> {
     index_count: usize,
 }
 
-// TODO: Draw non-overlapping panels in same batch
-// TODO: Set up batch to draw itself???
-// TODO: System for updating batch data for children
+// TODO: Set up traits for containers and elements, impl default trait Fns
+// so that we can have the data getters and update signals use callbacks within
+// each trait
+// e.g. UIContainer::add_child() will get the ping the child to update the parent transform
+//      UIChild::update_batch_data() will call the parent
+// Each UIChild has a reference to its parent???
 
 impl<'a> UIPanel<'a> {
     pub fn new(position: Vec2, size: Vec2, rotation: f32, color: Vec4, texture: Option<&'a Texture>) -> Self {

@@ -125,6 +125,11 @@ impl UIRenderer {
                 context.vao.vertex_count = batch.vertex_count as u32;
                 context.vao.index_count = batch.index_count as u32;
 
+                debug!("Drawing panel with {} vertices and {} indices", batch.vertex_count, batch.index_count);
+                debug!("Panel vertices: {:?}", batch.position_data);
+                debug!("Panel tex coords: {:?}", batch.tex_coord_data);
+                debug!("Panel colors: {:?}", batch.color_data);
+
                 context.shader.activate();
 
                 let tex = batch.texture.unwrap_or(&context.default_panel_texture);

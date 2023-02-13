@@ -45,6 +45,7 @@ pub struct UIPanel<'a> {
 
 // TODO: Draw non-overlapping panels in same batch
 // TODO: Set up batch to draw itself???
+// TODO: System for updating batch data for children
 
 impl<'a> UIPanel<'a> {
     pub fn new(position: Vec2, size: Vec2, rotation: f32, color: Vec4, texture: Option<&'a Texture>) -> Self {
@@ -85,12 +86,14 @@ impl<'a> UIPanel<'a> {
 
     pub fn add_child(&mut self, child: Box<dyn UIElement>) -> usize {
         let transform = self.get_transform();
-        let batch = child.get_data_for_buffer(transform);
+        let batch = child.get_data_for_buffer();
+        let positions: Vec<Vec4> = batch.position_data.iter().map(|vertex| transform * vertex.to_owned()).collect();
+        let indices: Vec<u32> = batch.index_data.iter().map(|index| index + self.vertex_count as u32).collect();
 
-        self.position_data.extend_from_slice(&batch.position_data);
+        self.position_data.extend_from_slice(positions.as_slice());
         self.tex_coord_data.extend_from_slice(&batch.tex_coord_data);
         self.color_data.extend_from_slice(&batch.color_data);
-        self.index_data.extend_from_slice(&batch.index_data);
+        self.index_data.extend_from_slice(indices.as_slice());
         self.vertex_count += batch.vertex_count;
         self.index_count += batch.index_count;
 
@@ -137,9 +140,10 @@ impl<'a> UIPanel<'a> {
     }
 
     fn gather_child_buffer_data(&mut self, transform: Mat4) {
-        self.children.iter().map(|child| child.get_data_for_buffer(transform))
+        self.children.iter().map(|child| child.get_data_for_buffer())
             .for_each(|batch| {
-                self.position_data.extend_from_slice(&batch.position_data);
+                let positions: Vec<Vec4> = batch.position_data.iter().map(|vertex| transform * vertex.to_owned()).collect();
+                self.position_data.extend_from_slice(positions.as_slice());
                 self.tex_coord_data.extend_from_slice(&batch.tex_coord_data);
                 self.color_data.extend_from_slice(&batch.color_data);
                 self.index_data.extend_from_slice(&batch.index_data);

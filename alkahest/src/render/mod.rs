@@ -78,7 +78,11 @@ impl RenderContext {
             Renderer2D::end_scene();
 
             UIRenderer::begin_scene(&self.cam);
-            let panel = ui::UIPanel::new(Vec2::new(0., 0.), Vec2::new(0.5, 0.5), 0., Vec4::new(0.2, 0.2, 0.2, 1.), None);
+            let mut panel = ui::UIPanel::new(Vec2::new(0., 0.), Vec2::new(0.5, 0.5), 0., Vec4::new(0.2, 0.2, 0.2, 1.), None);
+            let child = ui::BaseChild::new(Vec2::new(0., 0.), Vec2::new(0.5, 0.5), 0.);
+            let child2 = ui::BaseChild::new(Vec2::new(0.2, 0.2), Vec2::new(0.3, 0.5), 0.);
+            panel.add_child(Box::new(child));
+            panel.add_child(Box::new(child2));
             UIRenderer::draw_panel(&panel);
             UIRenderer::end_scene();
         }        
